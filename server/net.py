@@ -14,6 +14,8 @@ import contextlib
 import websockets  # type: ignore[import-not-found]
 from websockets.server import WebSocketServerProtocol  # type: ignore[import-not-found,attr-defined]
 
+from .state import SimState
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,6 +42,7 @@ class ServerState:
     seq: itertools.count = field(default_factory=lambda: itertools.count(1))
     tick: int = 0
     control: ControlParams = field(default_factory=ControlParams)
+    sim: SimState = field(default_factory=SimState)
 
 
 async def _handle_client(ws: WebSocketServerProtocol, state: ServerState) -> None:
@@ -80,8 +83,11 @@ async def _handle_client(ws: WebSocketServerProtocol, state: ServerState) -> Non
                 data = json.loads(raw)
             except json.JSONDecodeError:  # ignore malformed messages
                 continue
-            if data.get("t") == "control":
+            msg_type = data.get("t")
+            if msg_type == "control":
                 _apply_control(data, state.control)
+            elif msg_type == "edit_batch":
+                await _apply_edit_batch(data, ws, state)
             # Unknown message types are ignored.
     except websockets.ConnectionClosed:  # pragma: no cover - connection closed
         pass
@@ -103,29 +109,58 @@ def _apply_control(msg: Dict[str, Any], control: ControlParams) -> None:
             pass
 
 
+async def _apply_edit_batch(msg: Dict[str, Any], ws: WebSocketServerProtocol, state: ServerState) -> None:
+    """Apply an edit_batch message to the simulation state."""
+    edits = msg.get("edits")
+    if not isinstance(edits, list):
+        await _send_error(ws, state, "bad_request", "Malformed edits")
+        return
+    err = state.sim.apply_edits(edits)
+    if err:
+        await _send_error(ws, state, err["code"], "Entity id already exists" if err["code"] == "id_conflict" else "")
+
+
+async def _send_error(ws: WebSocketServerProtocol, state: ServerState, code: str, message: str) -> None:
+    """Send an error message to a client."""
+    error = {
+        "t": "error",
+        "seq": str(next(state.seq)),
+        "ts": _now_ms(),
+        "code": code,
+        "message": message,
+    }
+    await ws.send(json.dumps(error))
+    state.sent_counts[ws] = state.sent_counts.get(ws, 0) + 1
+
+
 async def _broadcast_snapshots(state: ServerState) -> None:
-    """Broadcast empty snapshots to all clients every second."""
+    """Broadcast full snapshots to all clients at the configured tick rate."""
     while True:
-        await asyncio.sleep(1)
-        state.tick += 1
-        snapshot = {
-            "t": "snapshot",
-            "seq": str(next(state.seq)),
-            "ts": _now_ms(),
-            "tick": state.tick,
-            "nodes": [],
-            "pipes": [],
-            "meta": {"solve_ms": 0},
-        }
-        message = json.dumps(snapshot)
-        for ws in list(state.clients):
-            try:
-                await ws.send(message)
-                state.sent_counts[ws] += 1
-            except websockets.ConnectionClosed:
-                state.clients.discard(ws)
-                state.sent_counts.pop(ws, None)
-                state.recv_counts.pop(ws, None)
+        start = time.perf_counter()
+        if not state.control.pause:
+            state.tick += 1
+            snap = state.sim.snapshot()
+            snapshot = {
+                "t": "snapshot",
+                "seq": str(next(state.seq)),
+                "ts": _now_ms(),
+                "tick": state.tick,
+                "nodes": snap["nodes"],
+                "pipes": snap["pipes"],
+                "meta": {"solve_ms": 0},
+            }
+            message = json.dumps(snapshot)
+            for ws in list(state.clients):
+                try:
+                    await ws.send(message)
+                    state.sent_counts[ws] += 1
+                except websockets.ConnectionClosed:
+                    state.clients.discard(ws)
+                    state.sent_counts.pop(ws, None)
+                    state.recv_counts.pop(ws, None)
+        elapsed = time.perf_counter() - start
+        delay = max(0.0, 1.0 / max(state.control.tick_hz, 1) - elapsed)
+        await asyncio.sleep(delay)
 
 
 async def start_server(host: str = "127.0.0.1", port: int = 7777):
