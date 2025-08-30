@@ -177,12 +177,13 @@ async def _send_error(ws: WSProtocol, state: ServerState, code: str, message: st
 
 
 async def _broadcast_snapshots(state: ServerState) -> None:
-    """Broadcast minimal snapshots at the configured rate."""
+    """Broadcast snapshots of the current simulation state."""
     while True:
+        snap = state.sim.snapshot()
         payload = {
             "t": time.time(),
-            "nodes": [],
-            "pipes": [],
+            "nodes": snap["nodes"],
+            "pipes": snap["pipes"],
             "version": PROTOCOL_VERSION,
         }
         message = json.dumps(payload)
