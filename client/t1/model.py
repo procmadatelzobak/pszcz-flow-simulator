@@ -27,10 +27,13 @@ class MapState:
     rows: int
     cols: int
     grid: List[List[Pixel]] = field(default_factory=list)
+    cm_per_pixel: float = 1.0
 
 
-def default_map(rows: int = 11, cols: int = 36) -> MapState:
+def default_map(
+    rows: int = 11, cols: int = 36, *, cm_per_pixel: float = 1.0
+) -> MapState:
     grid: List[List[Pixel]] = [
         [Pixel("hole", 0.0) for _ in range(cols)] for _ in range(rows)
     ]
-    return MapState(rows, cols, grid)
+    return MapState(rows, cols, grid, cm_per_pixel)

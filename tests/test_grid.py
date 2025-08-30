@@ -14,13 +14,15 @@ from server.tick import flow_step
 
 
 def test_map_serialization_roundtrip() -> None:
-    state = default_map(2, 2)
+    state = default_map(2, 2, cm_per_pixel=1.0)
     state.grid[0][0].material = "hole"
     state.grid[0][0].depth = 1.0
     data = export_map(state)
     loaded = import_map(data)
     assert loaded.grid[0][0].material == "hole"
     assert loaded.grid[0][0].depth == 1.0
+    assert data["cm_per_pixel"] == 1.0
+    assert loaded.cm_per_pixel == 1.0
 
 
 def test_water_flows_down() -> None:

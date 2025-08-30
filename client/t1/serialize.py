@@ -11,6 +11,7 @@ def export_map(state: MapState) -> dict[str, Any]:
     return {
         "rows": state.rows,
         "cols": state.cols,
+        "cm_per_pixel": state.cm_per_pixel,
         "grid": [
             [{"material": p.material, "depth": p.depth} for p in row]
             for row in state.grid
@@ -21,6 +22,7 @@ def export_map(state: MapState) -> dict[str, Any]:
 def import_map(data: dict[str, Any]) -> MapState:
     rows = data["rows"]
     cols = data["cols"]
+    cm_per_pixel = float(data.get("cm_per_pixel", 1.0))
     grid_data = data.get("grid", [])
     grid = [
         [Pixel(cell.get("material", "hole"), float(cell.get("depth", 0.0))) for cell in row]
@@ -32,7 +34,7 @@ def import_map(data: dict[str, Any]) -> MapState:
     for row in grid:
         if len(row) < cols:
             row.extend([Pixel("hole", 0.0) for _ in range(cols - len(row))])
-    return MapState(rows, cols, grid)
+    return MapState(rows, cols, grid, cm_per_pixel)
 
 
 def save_map(state: MapState, path: str | Path) -> None:

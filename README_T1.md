@@ -1,8 +1,9 @@
 # t1 Client
 
 `t1` is a read-only terminal client that renders a simple water flow using
-emoji (with an ASCII fallback). It does not accept any user input and
-terminates via `Ctrl+C`.
+emoji (with an ASCII fallback). Materials and water depth are colour coded and a
+legend with the current resolution is shown. It does not accept any user input
+and terminates via `Ctrl+C`.
 
 ## Usage
 
@@ -19,6 +20,7 @@ Options:
   connection fails the client falls back to the mock and shows an alarm.
 - `--ascii` – render using ASCII characters instead of emoji.
 - `--no-ansi` – disable ANSI escape codes (useful for snapshot tests).
+- `--cm-per-pixel` – physical size represented by one pixel (default 1.0 cm).
 - `--map path.json` – load a map from JSON.
 - `--save path.json` – export the current map to JSON.
 - `--fps 5` – set refresh rate (default 8).
@@ -26,12 +28,13 @@ Options:
 ## Map format
 
 Each map defines a 2D grid where every cell specifies the material and the
-current water depth:
+current water depth. The physical resolution `cm_per_pixel` defaults to 1.0:
 
 ```json
 {
   "rows": 2,
   "cols": 3,
+  "cm_per_pixel": 1.0,
   "grid": [
     [
       {"material": "hole", "depth": 0.0},
