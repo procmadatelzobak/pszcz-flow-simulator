@@ -3,4 +3,4 @@
 
 def test_websockets_importable() -> None:
     """`websockets` should be importable once installed via requirements."""
-    import websockets  # noqa: F401
+    import websockets  # type: ignore[import-not-found]  # noqa: F401
