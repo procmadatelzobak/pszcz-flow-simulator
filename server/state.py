@@ -22,7 +22,9 @@ class SimState:
     def apply_edits(self, edits: List[Dict[str, Any]]) -> Optional[Dict[str, str]]:
         """Apply a batch of edits atomically.
 
-        Returns an error dict on failure, or ``None`` on success.
+        Returns an error dict on failure, or ``None`` on success. The
+        validation covers basic structural checks, including ensuring that
+        pipes reference existing nodes.
         """
         new_nodes = {k: v.copy() for k, v in self.nodes.items()}
         new_pipes = {k: v.copy() for k, v in self.pipes.items()}
@@ -43,14 +45,22 @@ class SimState:
                 }
             elif op == "add_pipe":
                 pipe_id = edit.get("id")
-                if not isinstance(pipe_id, str):
+                a = edit.get("a")
+                b = edit.get("b")
+                if (
+                    not isinstance(pipe_id, str)
+                    or not isinstance(a, str)
+                    or not isinstance(b, str)
+                ):
                     return {"code": "bad_request"}
                 if pipe_id in new_pipes or pipe_id in new_nodes:
                     return {"code": "id_conflict"}
+                if a not in new_nodes or b not in new_nodes:
+                    return {"code": "unknown_entity"}
                 new_pipes[pipe_id] = {
                     "id": pipe_id,
-                    "a": edit.get("a", ""),
-                    "b": edit.get("b", ""),
+                    "a": a,
+                    "b": b,
                     "params": dict(edit.get("params", {})),
                     "state": {"q": 0, "dir": 0},
                 }

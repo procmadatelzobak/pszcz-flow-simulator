@@ -131,7 +131,7 @@ The client connects, prints the welcome message, then shows each snapshot tick w
 
 This seed repository uses a minimal continuous integration pipeline. All pull requests run:
 
-- `pytest -q` for the test suite (currently empty)
+- `pytest -q` for the test suite
 - `ruff check .` for linting
 - `mypy .` for static type checks
 
