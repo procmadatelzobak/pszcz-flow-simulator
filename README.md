@@ -89,7 +89,7 @@ client/
 python -m server.net
 ```
 
-The server listens on `ws://127.0.0.1:7777/ws` and broadcasts an empty snapshot every second.
+The server listens on `ws://127.0.0.1:7777/ws` and broadcasts full snapshots at the configured tick rate (default 50 Hz).
 
 Start the console client in another terminal:
 
