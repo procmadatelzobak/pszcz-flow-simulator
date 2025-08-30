@@ -14,16 +14,16 @@ Create these runnable components **without adding new files beyond this list** u
 
 - `server/` (Python 3.11+)
   - Headless WS server at `ws://127.0.0.1:7777/ws`.
-  - In-memory state (dicts or simple classes) for nodes/pipes.
+  - In-memory state (dicts or simple classes) for a pixel grid (materials and depths).
   - Tick loop with configurable `tick_hz` (default 50).
-  - Apply `edit_batch`, `control`, `save`.
+  - Apply `edit_grid`, `control`, `save`.
   - Broadcast **full `snapshot`** to all clients at steady cadence.
   - Async save of a **full JSON** snapshot (schema as in `PROTOCOL.md`).
 
 - `client/` (Python)
   - Connects to WS and performs `hello`/`welcome`.
-  - Receives and validates `snapshot` against requested `fields`.
-  - Minimal, text-based or very simple UI to add nodes/pipes, set params, pause/resume, change tick rate, and request save.
+  - Receives and validates `snapshot` (grid only).
+  - Minimal, text-based or very simple UI to edit pixels, pause/resume, change tick rate, and request save.
   - Renders something minimal (ASCII/very basic 2D). A later PR will switch to Pygame or Godot; do not block on graphics now.
 
 - `scripts/` (optional, later)
@@ -37,11 +37,11 @@ Create these runnable components **without adding new files beyond this list** u
    - Unknown fields are ignored gracefully.
 
 2. **Edits**
-   - Client can send `edit_batch` with: add_node, add_pipe, set_param, del.
-   - Server validates collisions and returns `error` with `code:"id_conflict"` if duplicate ID is proposed.
+   - Client can send `edit_grid` with `set_pixel` operations.
+   - Server validates material names and bounds; invalid requests return `error` with `code:"invalid_material"` or `"index_out_of_bounds"`.
 
 3. **Ticking & Snapshots**
-   - Server ticks at ~50 Hz with minimal jitter; broadcasts **full** snapshots at ≥20 Hz by default.
+   - Server ticks at ~50 Hz with minimal jitter; broadcasts **full** grid snapshots at ≥20 Hz by default.
    - `meta.solve_ms` included (even if it’s just elapsed step time).
 
 4. **Save (no pause)**
@@ -67,8 +67,8 @@ Create these runnable components **without adding new files beyond this list** u
 ## 4) Tests (MVP)
 
 - Unit tests (pytest) for:
-  - Handshake negotiation: `accept_major`, `min_minor`, `fields`.
-  - `edit_batch` validation (duplicate IDs, unknown ops).
+  - Handshake negotiation: `accept_major`, `min_minor`.
+  - `edit_grid` validation (invalid material, out-of-range coordinates).
   - Snapshot schema sanity (required fields present; units untouched).
   - Save file round-trip (write → read basic fields).
 - No integration tests with graphics yet.
@@ -95,4 +95,4 @@ Create these runnable components **without adding new files beyond this list** u
 - Lint/type checks pass.
 - README updated with run instructions.
 - Protocol examples in `PROTOCOL.md` remain valid.
-- No breaking changes to existing message fields; version remains `1.0` for MVP.
+- No breaking changes to existing message fields; version remains `2.0` for MVP.

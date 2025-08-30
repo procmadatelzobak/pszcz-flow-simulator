@@ -1,10 +1,10 @@
 # PSZCZ Flow Simulator — Seed (MVP)
 
-Protocol-first, CPU-only **client–server** simulator for a 2D pipe-network game.  
+Protocol-first, CPU-only **client–server** simulator for a 2D grid-based fluid game.
 This repository is a **seed**: minimal files, **complete specification**. All code will be generated later by Codex based solely on what’s here.
 
 - **Server (authoritative):** headless, Linux-friendly, computes physics. For MVP: trivial placeholder physics; later: real hydraulics.
-- **Client (viewer/controller):** renders the network and sends edits/controls. MVP: simplest possible Python UI; later: Godot-based client.
+- **Client (viewer/controller):** renders the grid and sends edits/controls. MVP: simplest possible Python UI; later: Godot-based client.
 - **Transport:** **WebSocket** over HTTP (`ws://host:7777/ws`), **JSON** payloads in MVP. Designed to sit behind nginx for HTTPS/auth later.
 - **Saves:** full-state JSON snapshot written asynchronously (no pause). Future: delta streams + replay.
 
@@ -14,17 +14,17 @@ This repository is a **seed**: minimal files, **complete specification**. All co
 
 1. Run a minimal server that:
    - Accepts WS connections.
-   - Maintains in-memory graph of **nodes** and **pipes**.
-   - Applies **edit batches** from a single controlling client.
-   - Emits **full snapshots** at a steady tick (e.g., 20–50 Hz).
-   - Writes **async full saves** on request.
+  - Maintains an in-memory grid of pixel **materials** and water depths.
+  - Applies **`edit_grid`** operations from a single controlling client.
+  - Emits **full grid snapshots** at a steady tick (e.g., 20–50 Hz).
+  - Writes **async full saves** on request.
 
 2. Run a minimal client that:
-   - Connects to WS, performs **hello/welcome** handshake.
-   - Displays basic info from snapshots (render is intentionally simple in MVP).
-   - Lets the user add nodes/pipes and change simple parameters.
-   - Sends `pause/resume` and `tick rate` controls.
-   - Requests a **save**.
+  - Connects to WS, performs **hello/welcome** handshake.
+  - Displays the pixel grid from snapshots.
+  - Lets the user change pixels and optional depths.
+  - Sends `pause/resume` and `tick rate` controls.
+  - Requests a **save**.
 
 3. Keep the protocol **forward/backward compatible** from day 0.
 
@@ -42,16 +42,15 @@ This repository is a **seed**: minimal files, **complete specification**. All co
   Client and server each maintain a local copy; server is the truth source.
 - **Networking:** One WS endpoint `/ws`. JSON messages. Multiple clients can connect; exactly **one has control** (control-lock).
 - **Ticking:** Server ticks at `tick_hz` (default 50). Snapshots broadcast at the same or a lower rate (default 20). Client interpolates if needed.
-- **IDs:** On MVP, **client assigns string IDs**; server rejects collisions. Future feature `ack-ids-1` lets server reassign.
+
 
 ## Data Model (concept)
 
-- **Node**: `{ id, type, params:{...}, state:{ p } }`
-  - `type ∈ { "source","sink","junction","pump","valve","accumulator" }`
-- **Pipe**: `{ id, a, b, params:{ length, diameter, roughness, open? }, state:{ q, dir } }`
-  - `dir ∈ { -1, 0, +1 }` (flow direction sign)
+- **Pixel**: `{ material, depth }`
+  - `material ∈ { "stone", "space", "spring", "sink" }`
+  - `depth ∈ [0,1]` fraction of cell filled with water
 
-**Units (stable):** pressure `Pa`, flow `m^3/s`, length `m`, diameter `m`. Changing units would require a **major** protocol bump.
+**Units (stable):** depth `m`. Changing units would require a **major** protocol bump.
 
 ## Saves (MVP)
 
@@ -165,10 +164,8 @@ pszcz-server
 ```
 
 The server listens on `ws://127.0.0.1:7777/ws` and broadcasts full snapshots at
-the configured tick rate (default 50 Hz). On startup it auto-loads the level
-`level.smoke.pump_to_drain.v1`, a simple pump-to-drain scenario used for smoke
-testing. Clients immediately receive the nodes and pipes from this level in the
-first snapshot.
+the configured tick rate (default 50 Hz). On startup it auto-loads a test grid.
+Clients immediately receive the pixel grid from this level in the first snapshot.
 
 Start the console client in another terminal:
 
