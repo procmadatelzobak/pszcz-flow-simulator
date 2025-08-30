@@ -51,6 +51,9 @@ This repository is a **seed**: minimal files, **complete specification**. All co
 - **Pixel**: `{ material, depth }`
   - `material ∈ { "stone", "space", "spring", "sink" }`
   - `depth ∈ [0,1]` fraction of cell filled with water
+  - solid materials: `{ "stone" }`
+  - passable materials: `{ "space", "spring", "sink" }`
+  - springs refill to full and sinks drain before gravity is applied each tick
 
 **Units (stable):** depth `m`. Changing units would require a **major** protocol bump.
 

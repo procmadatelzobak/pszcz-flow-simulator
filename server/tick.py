@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from .state import SimState
-
-
-SOLID = {"stone"}
+from .state import PASSABLE_MATERIALS, SOLID_MATERIALS, SimState
 
 
 def _is_open(material: str) -> bool:
-    return material not in SOLID
+    return material in PASSABLE_MATERIALS
 
 
 def flow_step(state: SimState) -> None:
@@ -30,7 +27,7 @@ def flow_step(state: SimState) -> None:
     for r in range(rows - 1, -1, -1):
         for c in range(cols):
             cell = state.grid[r][c]
-            if cell.material in SOLID:
+            if cell.material in SOLID_MATERIALS:
                 new_depths[r][c] = 0.0
                 continue
             if cell.depth <= 0:
@@ -47,8 +44,6 @@ def flow_step(state: SimState) -> None:
         for c in range(cols):
             cell = state.grid[r][c]
             cell.depth = max(min(new_depths[r][c], 1.0), 0.0)
-            if cell.material == "spring":
-                cell.depth = 1.0
-            elif cell.material == "sink":
+            if cell.material == "sink":
                 cell.depth = 0.0
 

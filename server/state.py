@@ -13,6 +13,10 @@ from typing import Any, Dict, List, Optional
 # Supported materials for a :class:`Pixel`.
 VALID_MATERIALS = {"stone", "space", "spring", "sink"}
 
+# Classification of materials used by the simulation.
+SOLID_MATERIALS = {"stone"}
+PASSABLE_MATERIALS = {"space", "spring", "sink"}
+
 
 @dataclass
 class Pixel:
