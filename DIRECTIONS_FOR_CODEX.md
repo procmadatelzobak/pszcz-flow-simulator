@@ -75,7 +75,7 @@ Create these runnable components **without adding new files beyond this list** u
 
 ## 5) Performance Targets (MVP—not strict)
 
-- With placeholder physics, a graph of ~5k edges should tick at 50 Hz on a mainstream desktop CPU.
+- With placeholder physics, a grid of ~5k pixels should tick at 50 Hz on a mainstream desktop CPU.
 - Memory use is not constrained in MVP (the future server may use far more RAM and advanced solvers).
 
 ## 6) Roadmap Tasks (post-MVP; open issues)

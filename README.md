@@ -1,6 +1,7 @@
 # PSZCZ Flow Simulator — Seed (MVP)
 
 Protocol-first, CPU-only **client–server** simulator for a 2D grid-based fluid game.
+The entire world is a uniform pixel grid without any graph constructs.
 This repository is a **seed**: minimal files, **complete specification**. All code will be generated later by Codex based solely on what’s here.
 
 - **Server (authoritative):** headless, Linux-friendly, computes physics. For MVP: trivial placeholder physics; later: real hydraulics.
@@ -15,7 +16,7 @@ This repository is a **seed**: minimal files, **complete specification**. All co
 1. Run a minimal server that:
    - Accepts WS connections.
   - Maintains an in-memory grid of pixel **materials** and water depths.
-  - Applies **`edit_grid`** operations from a single controlling client.
+  - Applies **`edit_grid`** messages composed of `set_pixel` operations from a single controlling client.
   - Emits **full grid snapshots** at a steady tick (e.g., 20–50 Hz).
   - Writes **async full saves** on request.
 
@@ -41,6 +42,7 @@ This repository is a **seed**: minimal files, **complete specification**. All co
 - **Authoritative state lives on the server.**  
   Client and server each maintain a local copy; server is the truth source.
 - **Networking:** One WS endpoint `/ws`. JSON messages. Multiple clients can connect; exactly **one has control** (control-lock).
+- **State:** All simulation data is stored in a 2D pixel array; there are no graph structures.
 - **Ticking:** Server ticks at `tick_hz` (default 50). Snapshots broadcast at the same or a lower rate (default 20). Client interpolates if needed.
 
 
@@ -101,6 +103,10 @@ pip install .
 python -m server.net --host 0.0.0.0 --port 7777 --health-port 7778 --tick-hz 40 &
 curl http://127.0.0.1:7778/health
 python -m client.t1.emoji_client --endpoint ws://127.0.0.1:7777/ws
+
+# Example edit: turn cell (0,0) into a spring
+# (use any WS client to send the JSON line below)
+{"t":"edit_grid","seq":"1","ts":0,"ops":[{"op":"set_pixel","r":0,"c":0,"material":"spring"}]}
 ```
 
 The server writes `save-*.json` in its working directory.
