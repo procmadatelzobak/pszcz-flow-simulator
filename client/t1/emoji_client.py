@@ -15,6 +15,7 @@ def main() -> None:
     parser.add_argument("--rows", type=int, default=11)
     parser.add_argument("--cols", type=int, default=36)
     parser.add_argument("--fps", type=float, default=8.0)
+    parser.add_argument("--cm-per-pixel", type=float, default=1.0, help="resolution in cm per pixel")
     parser.add_argument("--ascii", action="store_true")
     parser.add_argument("--no-ansi", action="store_true")
     parser.add_argument("--map", type=str)
@@ -23,8 +24,9 @@ def main() -> None:
 
     if args.map:
         state = serialize.load_map(args.map)
+        state.cm_per_pixel = args.cm_per_pixel
     else:
-        state = model.default_map(args.rows, args.cols)
+        state = model.default_map(args.rows, args.cols, cm_per_pixel=args.cm_per_pixel)
 
     if args.save:
         serialize.save_map(state, args.save)

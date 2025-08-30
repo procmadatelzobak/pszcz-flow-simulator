@@ -123,7 +123,8 @@ about the running server. Example: `curl http://127.0.0.1:7778/health`.
 - **t0** – original interactive client now located under `client/t0`.
   Run with `python -m client.t0` or the `pszcz-client` wrapper.
 - **t1** – read-only terminal client with emoji or ASCII output.
-  It renders a grid of material tiles, each tracking its own water depth.
+  It renders a colour-coded grid of material tiles with water depth and shows a
+  legend including the current resolution (default 1 cm per pixel).
   Run with `python -m client.t1.emoji_client` (wrapper: `pszcz-client-start-t1`).
 
 The previous client entry points were replaced with `python -m client.t0`.
