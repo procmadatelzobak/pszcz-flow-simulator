@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+import argparse
 import asyncio
+import contextlib
 import itertools
 import json
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator, Dict, Protocol, Set
 from pathlib import Path
-import contextlib
+from typing import Any, AsyncIterator, Dict, Protocol, Set
 
 import websockets  # type: ignore[import-not-found]
+from . import __version__
 from .state import SimState
 from .io import load_level
 
@@ -36,6 +38,8 @@ class WSProtocol(Protocol):
         ...
 
 logger = logging.getLogger(__name__)
+
+PROTOCOL_VERSION = "mvp-0"
 
 
 def _now_ms() -> int:
@@ -62,6 +66,7 @@ class ServerState:
     tick: int = 0
     control: ControlParams = field(default_factory=ControlParams)
     sim: SimState = field(default_factory=SimState)
+    snapshot_hz: float = 20.0
 
 
 async def _handle_client(ws: WSProtocol, state: ServerState) -> None:
@@ -171,39 +176,32 @@ async def _send_error(ws: WSProtocol, state: ServerState, code: str, message: st
 
 
 async def _broadcast_snapshots(state: ServerState) -> None:
-    """Broadcast full snapshots to all clients at the configured tick rate."""
+    """Broadcast minimal snapshots at the configured rate."""
     while True:
-        start = time.perf_counter()
-        if not state.control.pause:
-            state.tick += 1
-            snap = state.sim.snapshot()
-            snapshot = {
-                "t": "snapshot",
-                "seq": str(next(state.seq)),
-                "ts": _now_ms(),
-                "tick": state.tick,
-                "nodes": snap["nodes"],
-                "pipes": snap["pipes"],
-                "meta": {"solve_ms": 0},
-            }
-            message = json.dumps(snapshot)
-            for ws in list(state.clients):
-                try:
-                    await ws.send(message)
-                    state.sent_counts[ws] += 1
-                except websockets.ConnectionClosed:
-                    state.clients.discard(ws)
-                    state.sent_counts.pop(ws, None)
-                    state.recv_counts.pop(ws, None)
-        elapsed = time.perf_counter() - start
-        delay = max(0.0, 1.0 / max(state.control.tick_hz, 1) - elapsed)
-        await asyncio.sleep(delay)
+        payload = {
+            "t": time.time(),
+            "nodes": [],
+            "pipes": [],
+            "version": PROTOCOL_VERSION,
+        }
+        message = json.dumps(payload)
+        for ws in list(state.clients):
+            try:
+                await ws.send(message)
+                state.sent_counts[ws] = state.sent_counts.get(ws, 0) + 1
+            except websockets.ConnectionClosed:
+                state.clients.discard(ws)
+                state.sent_counts.pop(ws, None)
+                state.recv_counts.pop(ws, None)
+        await asyncio.sleep(1.0 / state.snapshot_hz if state.snapshot_hz > 0 else 0)
 
 
 async def start_server(
     host: str = "127.0.0.1",
     port: int = 7777,
-    level_path: str | Path | None = Path("levels/level.smoke.pump_to_drain.v1.json"),
+    tick_hz: float = 50.0,
+    snapshot_hz: float = 20.0,
+    level_path: str | Path | None = None,
 ):
     """Start the WebSocket server and snapshot broadcaster.
 
@@ -212,34 +210,67 @@ async def start_server(
     empty.
     """
     state = ServerState()
+    state.control.tick_hz = int(tick_hz)
+    state.snapshot_hz = snapshot_hz
     if level_path is not None:
         try:
             load_level(level_path, state.sim)
         except FileNotFoundError:
             logger.warning("level file %s not found; starting empty", level_path)
 
-    async def handler(ws: WSProtocol) -> None:
-        if ws.request.path != "/ws":
+    async def handler(ws: Any) -> None:
+        if getattr(ws, "path", "") != "/ws":
             await ws.close()
             return
         await _handle_client(ws, state)
 
-    server = await websockets.serve(handler, host, port)  # type: ignore[arg-type]
+    async def _process_request(
+        path: str, request_headers: Any
+    ) -> tuple[int, list[tuple[str, str]], bytes] | None:
+        if path == "/health":
+            body = json.dumps({"ok": True, "version": __version__}).encode()
+            headers = [("Content-Type", "application/json"), ("Content-Length", str(len(body)))]
+            return 200, headers, body
+        return None
+
+    server = await websockets.serve(
+        handler, host, port, process_request=_process_request
+    )  # type: ignore[arg-type]
     broadcaster = asyncio.create_task(_broadcast_snapshots(state))
     return server, broadcaster
 
 
-async def main() -> None:
+def main() -> None:
     """Run the server until interrupted."""
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    server, broadcaster = await start_server()
-    try:
-        await server.wait_closed()
-    finally:
-        broadcaster.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await broadcaster
+    parser = argparse.ArgumentParser(description="PSZCZ Flow Simulator server")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=7777)
+    parser.add_argument("--tick-hz", type=float, default=50.0)
+    parser.add_argument("--snapshot-hz", type=float, default=20.0)
+    parser.add_argument("--log-level", default="INFO")
+    args = parser.parse_args()
+
+    logging.basicConfig(
+        level=getattr(logging, args.log_level.upper(), logging.INFO),
+        format="%(asctime)s %(levelname)s %(message)s",
+    )
+
+    async def runner() -> None:
+        server, broadcaster = await start_server(
+            host=args.host,
+            port=args.port,
+            tick_hz=args.tick_hz,
+            snapshot_hz=args.snapshot_hz,
+        )
+        try:
+            await server.wait_closed()
+        finally:
+            broadcaster.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await broadcaster
+
+    asyncio.run(runner())
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

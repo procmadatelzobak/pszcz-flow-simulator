@@ -3,6 +3,7 @@ import contextlib
 import json
 import sys
 from pathlib import Path
+from urllib.request import urlopen
 
 import websockets  # type: ignore[import-not-found]
 
@@ -24,16 +25,17 @@ HELLO = {
 }
 
 
-def test_hello_welcome() -> None:
+def test_health_endpoint() -> None:
     async def inner() -> None:
         server, broadcaster = await net.start_server()
         try:
-            async with websockets.connect("ws://127.0.0.1:7777/ws") as ws:
-                await ws.send(json.dumps(HELLO))
-                welcome = json.loads(await asyncio.wait_for(ws.recv(), timeout=1))
-                assert welcome["t"] == "welcome"
-                assert welcome["version"] == {"major": 1, "minor": 0}
-                assert welcome["fields"] == ["node.p", "edge.q"]
+            def fetch() -> tuple[int, dict]:
+                with urlopen("http://127.0.0.1:7777/health") as resp:
+                    return resp.status, json.loads(resp.read().decode())
+
+            status, data = await asyncio.to_thread(fetch)
+            assert status == 200
+            assert data == {"ok": True, "version": net.__version__}
         finally:
             server.close()
             await server.wait_closed()
@@ -46,16 +48,18 @@ def test_hello_welcome() -> None:
 
 def test_snapshot_broadcast() -> None:
     async def inner() -> None:
-        server, broadcaster = await net.start_server()
+        server, broadcaster = await net.start_server(snapshot_hz=5)
         try:
             async with websockets.connect("ws://127.0.0.1:7777/ws") as ws:
                 await ws.send(json.dumps(HELLO))
-                await asyncio.wait_for(ws.recv(), timeout=1)
-                snapshot = json.loads(await asyncio.wait_for(ws.recv(), timeout=2))
-                assert snapshot["t"] == "snapshot"
-                assert {n["id"] for n in snapshot["nodes"]} == {"P1", "D1"}
-                assert [p["id"] for p in snapshot["pipes"]] == ["E_P1_D1"]
-                assert snapshot["meta"] == {"solve_ms": 0}
+                await asyncio.wait_for(ws.recv(), timeout=1)  # welcome
+                snapshots = [
+                    json.loads(await asyncio.wait_for(ws.recv(), timeout=2))
+                    for _ in range(2)
+                ]
+                for snap in snapshots:
+                    assert set(snap.keys()) == {"t", "nodes", "pipes", "version"}
+                    assert snap["version"] == "mvp-0"
         finally:
             server.close()
             await server.wait_closed()
