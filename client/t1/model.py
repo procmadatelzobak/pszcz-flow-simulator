@@ -1,25 +1,17 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List, Literal
+
+Material = Literal["brick", "stone", "hole", "filter", "gate"]
 
 
 @dataclass
-class Pump:
-    row: int
-    col: int
+class Pixel:
+    """Single map cell carrying material type and water depth."""
 
-
-@dataclass
-class Pipe:
-    row: int
-    start_col: int
-    end_col: int
-
-
-@dataclass
-class Sink:
-    row: int
-    col: int
+    material: Material
+    depth: float = 0.0
 
 
 @dataclass
@@ -34,14 +26,11 @@ class FlowSnapshot:
 class MapState:
     rows: int
     cols: int
-    pump: Pump
-    pipe: Pipe
-    sink: Sink
+    grid: List[List[Pixel]] = field(default_factory=list)
 
 
 def default_map(rows: int = 11, cols: int = 36) -> MapState:
-    mid = rows // 2
-    pump = Pump(mid, 2)
-    pipe = Pipe(mid, 3, cols - 3)
-    sink = Sink(mid, cols - 2)
-    return MapState(rows, cols, pump, pipe, sink)
+    grid: List[List[Pixel]] = [
+        [Pixel("hole", 0.0) for _ in range(cols)] for _ in range(rows)
+    ]
+    return MapState(rows, cols, grid)

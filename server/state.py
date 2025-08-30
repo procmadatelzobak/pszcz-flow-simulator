@@ -6,17 +6,30 @@ from typing import Any, Dict, List, Optional
 
 
 @dataclass
+class Pixel:
+    """Single cell in the simulation grid."""
+
+    material: str
+    depth: float = 0.0
+
+
+@dataclass
 class SimState:
-    """Simulation state consisting of nodes and pipes."""
+    """Simulation state consisting of nodes, pipes and a grid."""
 
     nodes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     pipes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    grid: List[List[Pixel]] = field(default_factory=list)
 
-    def snapshot(self) -> Dict[str, List[Dict[str, Any]]]:
-        """Return a snapshot of current nodes and pipes."""
+    def snapshot(self) -> Dict[str, Any]:
+        """Return a snapshot of current nodes, pipes and grid."""
         return {
             "nodes": list(self.nodes.values()),
             "pipes": list(self.pipes.values()),
+            "grid": [
+                [{"material": cell.material, "depth": cell.depth} for cell in row]
+                for row in self.grid
+            ],
         }
 
     def apply_edits(self, edits: List[Dict[str, Any]]) -> Optional[Dict[str, str]]:

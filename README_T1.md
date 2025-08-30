@@ -25,13 +25,25 @@ Options:
 
 ## Map format
 
+Each map defines a 2D grid where every cell specifies the material and the
+current water depth:
+
 ```json
 {
-  "rows": 11,
-  "cols": 36,
-  "pump": {"row": 5, "col": 2},
-  "pipe": {"row": 5, "start_col": 3, "end_col": 33},
-  "sink": {"row": 5, "col": 34}
+  "rows": 2,
+  "cols": 3,
+  "grid": [
+    [
+      {"material": "hole", "depth": 0.0},
+      {"material": "brick", "depth": 0.0},
+      {"material": "hole", "depth": 1.0}
+    ],
+    [
+      {"material": "stone", "depth": 0.0},
+      {"material": "hole", "depth": 0.5},
+      {"material": "filter", "depth": 0.0}
+    ]
+  ]
 }
 ```
 
