@@ -1,0 +1,54 @@
+{
+  "level_id": "level.smoke.pump_to_drain.v1",
+  "size_m": { "w": 60, "h": 30 },
+  "ambient": { "fluid_id": "water", "temperature_C": 20.0 },
+  "nodes": [
+    {
+      "id": "P1",
+      "type": "pump",
+      "name": "Main Pump",
+      "pos": [10, 15],
+      "pump_curve": {
+        "max_head_bar": 1.2,
+        "Qmax_Ls": 1.80
+      },
+      "control": { "mode": "fixed_speed", "speed_pct": 100 }
+    },
+    {
+      "id": "D1",
+      "type": "drain",
+      "name": "Atmospheric Drain",
+      "pos": [50, 15],
+      "pressure_bar": 0.0
+    }
+  ],
+  "pipes": [
+    {
+      "id": "E_P1_D1",
+      "a": "P1",
+      "b": "D1",
+      "length_m": 30,
+      "diameter_mm": 150,
+      "max_pressure_bar": 6,
+      "resistance_bar_per_Ls": 0.50
+    }
+  ],
+  "ui_probes": [
+    { "id": "M_FLOW", "attach_to": "E_P1_D1", "mode": "flow_pressure" }
+  ],
+  "objectives": [
+    {
+      "id": "OBJ_STABLE",
+      "type": "sustain_band",
+      "target_edge": "E_P1_D1",
+      "metric": "flow_Ls",
+      "min": 0.50,
+      "max": 1.70,
+      "duration_s": 30
+    }
+  ],
+  "hints": [
+    "This is a minimal test: pump → pipe → drain.",
+    "Watch the flow and pressure probe to verify stability."
+  ]
+}

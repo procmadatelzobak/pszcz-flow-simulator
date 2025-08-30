@@ -14,6 +14,7 @@ import contextlib
 
 import websockets  # type: ignore[import-not-found]
 from .state import SimState
+from .io import load_level
 
 
 class WSProtocol(Protocol):
@@ -199,9 +200,23 @@ async def _broadcast_snapshots(state: ServerState) -> None:
         await asyncio.sleep(delay)
 
 
-async def start_server(host: str = "127.0.0.1", port: int = 7777):
-    """Start the WebSocket server and snapshot broadcaster."""
+async def start_server(
+    host: str = "127.0.0.1",
+    port: int = 7777,
+    level_path: str | Path | None = Path("levels/level.smoke.pump_to_drain.v1.json"),
+):
+    """Start the WebSocket server and snapshot broadcaster.
+
+    A level file is loaded into the simulation before accepting clients. If
+    ``level_path`` is ``None`` or the file is missing, the simulation starts
+    empty.
+    """
     state = ServerState()
+    if level_path is not None:
+        try:
+            load_level(level_path, state.sim)
+        except FileNotFoundError:
+            logger.warning("level file %s not found; starting empty", level_path)
 
     async def handler(ws: WSProtocol) -> None:
         if ws.request.path != "/ws":
