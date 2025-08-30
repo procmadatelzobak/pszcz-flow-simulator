@@ -8,7 +8,7 @@ import websockets  # type: ignore[import-not-found]
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from server import net as server_net
-from client import net as client_net
+from client.t0 import net as client_net
 
 
 def test_server_client_handshake() -> None:

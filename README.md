@@ -78,9 +78,18 @@ server/
     io.py
 client/
     __init__.py
-    net.py
-    ui.py
-    state.py
+    t0/
+        __init__.py
+        net.py
+        ui.py
+        state.py
+    t1/
+        __init__.py
+        adapter.py
+        emoji_client.py
+        model.py
+        serialize.py
+        view.py
 ```
 
 ## Quick Start
@@ -106,6 +115,15 @@ save
 
 The server writes `save-*.json` in its working directory.
 
+## Clients
+
+- **t0** – original interactive client now located under `client/t0`.
+  Run with `python -m client.t0` or the `pszcz-client` wrapper.
+- **t1** – read-only terminal client with emoji or ASCII output.
+  Run with `python -m client.t1.emoji_client` (wrapper: `pszcz-client-start-t1`).
+
+The previous client entry points were replaced with `python -m client.t0`.
+
 ## Automated installation
 
 A helper script [`install_pszcz.sh`](install_pszcz.sh) bootstraps the project on
@@ -126,7 +144,7 @@ environment variables:
 REPO_URL="https://github.com/procmadatelzobak/pszcz-flow-simulator" \
 INSTALL_ROOT="/opt/pszcz" \
 SERVER_ENTRY="python -m server.net" \
-CLIENT_ENTRY="python -m client.net" \
+CLIENT_ENTRY="python -m client.t0" \
 bash install_pszcz.sh
 ```
 
@@ -134,6 +152,7 @@ The script installs helper commands:
 
 - `pszcz-server-start` / `pszcz-server-stop`
 - `pszcz-client-start` / `pszcz-client-stop`
+- `pszcz-client-start-t1` – run the read-only client
 - `pszcz-update` to pull the latest code and refresh dependencies
 
 Both server and client communicate on `ws://127.0.0.1:7777/ws` by default.
