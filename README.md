@@ -83,6 +83,14 @@ client/
     state.py
 ```
 
+## Running
+
+```sh
+python -m server.net
+```
+
+The server listens on `ws://127.0.0.1:7777/ws` and broadcasts an empty snapshot every second.
+
 ## Contributing
 
 This seed repository uses a minimal continuous integration pipeline. All pull requests run:
