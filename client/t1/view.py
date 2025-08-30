@@ -12,11 +12,10 @@ class MaterialSpec(TypedDict):
 
 
 MATERIALS: dict[str, MaterialSpec] = {
-    "brick": {"emoji": "🧱", "ascii": "[]", "color": "31"},
     "stone": {"emoji": "🪨", "ascii": "##", "color": "37"},
-    "hole": {"emoji": "  ", "ascii": "  ", "color": None},
-    "filter": {"emoji": "🔳", "ascii": "FF", "color": "32"},
-    "gate": {"emoji": "🚪", "ascii": "||", "color": "33"},
+    "space": {"emoji": "  ", "ascii": "  ", "color": None},
+    "spring": {"emoji": "💧", "ascii": "SS", "color": "34"},
+    "sink": {"emoji": "🕳️", "ascii": "OO", "color": "30"},
 }
 
 WATER_TILE = {"emoji": "💧", "ascii": "~~"}
@@ -90,3 +89,4 @@ def render(state: MapState, snap: FlowSnapshot, *, ascii: bool = False, no_ansi:
     if not no_ansi:
         frame = "\x1b[2J\x1b[H" + frame
     return frame
+

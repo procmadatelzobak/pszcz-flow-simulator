@@ -31,15 +31,15 @@ def import_map(data: dict[str, Any]) -> MapState:
     cm_per_pixel = float(data.get("cm_per_pixel", 1.0))
     grid_data = data.get("grid", [])
     grid = [
-        [Pixel(cell.get("material", "hole"), float(cell.get("depth", 0.0))) for cell in row]
+        [Pixel(cell.get("material", "space"), float(cell.get("depth", 0.0))) for cell in row]
         for row in grid_data
     ]
     # Ensure grid has correct size
     if len(grid) < rows:
-        grid.extend([[Pixel("hole", 0.0) for _ in range(cols)] for _ in range(rows - len(grid))])
+        grid.extend([[Pixel("space", 0.0) for _ in range(cols)] for _ in range(rows - len(grid))])
     for row in grid:
         if len(row) < cols:
-            row.extend([Pixel("hole", 0.0) for _ in range(cols - len(row))])
+            row.extend([Pixel("space", 0.0) for _ in range(cols - len(row))])
     return MapState(rows, cols, grid, cm_per_pixel)
 
 

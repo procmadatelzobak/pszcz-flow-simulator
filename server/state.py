@@ -1,13 +1,17 @@
-"""In-memory simulation state and edit application logic.
+"""In-memory simulation state and grid edit application logic.
 
-The simulator maintains a pixel grid alongside node and pipe structures. Each
-grid cell stores a terrain ``material`` and water ``depth`` in the ``0.0–1.0``
-range.
+The simulator maintains a rectangular pixel grid. Each cell stores a terrain
+``material`` and water ``depth`` in the ``0.0–1.0`` range.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+
+
+# Supported materials for a :class:`Pixel`.
+VALID_MATERIALS = {"stone", "space", "spring", "sink"}
 
 
 @dataclass
@@ -17,7 +21,7 @@ class Pixel:
     Attributes
     ----------
     material:
-        One of ``brick``, ``stone``, ``hole``, ``filter`` or ``gate``.
+        One of ``stone``, ``space``, ``spring`` or ``sink``.
     depth:
         Fraction ``0.0–1.0`` describing how full the cell is with water.
     """
@@ -28,93 +32,69 @@ class Pixel:
 
 @dataclass
 class SimState:
-    """Simulation state consisting of nodes, pipes and a pixel grid."""
+    """Simulation state consisting only of the pixel grid."""
 
-    nodes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    pipes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     grid: List[List[Pixel]] = field(default_factory=list)
 
     def snapshot(self) -> Dict[str, Any]:
-        """Return a snapshot of current nodes, pipes and grid."""
+        """Return a snapshot of the current grid."""
+
         return {
-            "nodes": list(self.nodes.values()),
-            "pipes": list(self.pipes.values()),
             "grid": [
-                [{"material": cell.material, "depth": cell.depth} for cell in row]
+                [
+                    {"material": cell.material, "depth": cell.depth}
+                    for cell in row
+                ]
                 for row in self.grid
-            ],
+            ]
         }
 
     def apply_edits(self, edits: List[Dict[str, Any]]) -> Optional[Dict[str, str]]:
-        """Apply a batch of edits atomically.
+        """Apply a batch of grid edits atomically.
 
-        Returns an error dict on failure, or ``None`` on success. The
-        validation covers basic structural checks, including ensuring that
-        pipes reference existing nodes.
+        Supported operations
+        --------------------
+        ``set_pixel``
+            ``{"op":"set_pixel","r":int,"c":int,"material":str,"depth":float?}``
+        ``fill``
+            ``{"op":"fill","r":int,"c":int}`` – set depth to ``1.0``.
+        ``drain``
+            ``{"op":"drain","r":int,"c":int}`` – set depth to ``0.0``.
+
+        Returns ``None`` on success or an error ``{"code": str}`` mapping on
+        failure.
         """
-        new_nodes = {k: v.copy() for k, v in self.nodes.items()}
-        new_pipes = {k: v.copy() for k, v in self.pipes.items()}
+
+        rows = len(self.grid)
+        cols = len(self.grid[0]) if rows else 0
 
         for edit in edits:
             op = edit.get("op")
-            if op == "add_node":
-                node_id = edit.get("id")
-                if not isinstance(node_id, str):
-                    return {"code": "bad_request"}
-                if node_id in new_nodes or node_id in new_pipes:
-                    return {"code": "id_conflict"}
-                new_nodes[node_id] = {
-                    "id": node_id,
-                    "type": edit.get("type", "junction"),
-                    "params": dict(edit.get("params", {})),
-                    "state": {"p": 0},
-                }
-            elif op == "add_pipe":
-                pipe_id = edit.get("id")
-                a = edit.get("a")
-                b = edit.get("b")
-                if (
-                    not isinstance(pipe_id, str)
-                    or not isinstance(a, str)
-                    or not isinstance(b, str)
-                ):
-                    return {"code": "bad_request"}
-                if pipe_id in new_pipes or pipe_id in new_nodes:
-                    return {"code": "id_conflict"}
-                if a not in new_nodes or b not in new_nodes:
-                    return {"code": "unknown_entity"}
-                new_pipes[pipe_id] = {
-                    "id": pipe_id,
-                    "a": a,
-                    "b": b,
-                    "params": dict(edit.get("params", {})),
-                    "state": {"q": 0, "dir": 0},
-                }
-            elif op == "set_param":
-                ent_id = edit.get("id")
-                key = edit.get("key")
-                if not isinstance(ent_id, str) or not isinstance(key, str):
-                    return {"code": "bad_request"}
-                value = edit.get("value")
-                if ent_id in new_nodes:
-                    new_nodes[ent_id]["params"][key] = value
-                elif ent_id in new_pipes:
-                    new_pipes[ent_id]["params"][key] = value
-                else:
-                    return {"code": "unknown_entity"}
-            elif op == "del":
-                ent_id = edit.get("id")
-                if not isinstance(ent_id, str):
-                    return {"code": "bad_request"}
-                if ent_id in new_nodes:
-                    new_nodes.pop(ent_id, None)
-                elif ent_id in new_pipes:
-                    new_pipes.pop(ent_id, None)
-                else:
-                    return {"code": "unknown_entity"}
+            r = edit.get("r")
+            c = edit.get("c")
+            if not isinstance(r, int) or not isinstance(c, int):
+                return {"code": "bad_request"}
+            if r < 0 or c < 0 or r >= rows or c >= cols:
+                return {"code": "index_out_of_bounds"}
+            cell = self.grid[r][c]
+
+            if op == "set_pixel":
+                material = edit.get("material")
+                if material not in VALID_MATERIALS:
+                    return {"code": "invalid_material"}
+                cell.material = material
+                depth = edit.get("depth")
+                if depth is not None:
+                    try:
+                        cell.depth = max(0.0, min(1.0, float(depth)))
+                    except (TypeError, ValueError):
+                        return {"code": "bad_request"}
+            elif op == "fill":
+                cell.depth = 1.0
+            elif op == "drain":
+                cell.depth = 0.0
             else:
                 return {"code": "bad_request"}
 
-        self.nodes = new_nodes
-        self.pipes = new_pipes
         return None
+

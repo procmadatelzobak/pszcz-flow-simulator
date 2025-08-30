@@ -14,8 +14,8 @@ def _sample_state() -> MapState:
         2,
         2,
         [
-            [Pixel("brick", 0.0), Pixel("hole", 0.5)],
-            [Pixel("filter", 0.0), Pixel("stone", 0.0)],
+            [Pixel("stone", 0.0), Pixel("spring", 0.0)],
+            [Pixel("space", 0.5), Pixel("sink", 0.0)],
         ],
         1.0,
     )
@@ -30,11 +30,11 @@ def test_render_no_ansi_snapshot() -> None:
     snap = _sample_snap()
     frame = render(state, snap, ascii=False, no_ansi=True)
     expected = (
-        "🧱💧\n"
-        "🔳🪨\n"
+        "🪨💧\n"
+        "💧🕳️\n"
         "Source ▱▱▱▱ (0.00) | Flow ▱▱▱▱ (0.00) | Sink ▱▱▱▱ (0.00)\n"
         "Mode: Emoji | Res: 1.0 cm/px\n"
-        "Legend: 🧱=brick, 🪨=stone,   =hole, 🔳=filter, 🚪=gate | Water: 💧25% 💧50% 💧75% 💧100%"
+        "Legend: 🪨=stone,   =space, 💧=spring, 🕳️=sink | Water: 💧25% 💧50% 💧75% 💧100%"
     )
     assert frame == expected
     assert "\x1b" not in frame
@@ -45,11 +45,11 @@ def test_render_ascii_fallback_snapshot() -> None:
     snap = _sample_snap()
     frame = render(state, snap, ascii=True, no_ansi=True)
     expected = (
-        "[]~~\n"
-        "FF##\n"
+        "##SS\n"
+        "~~OO\n"
         "Source ░░░░ (0.00) | Flow ░░░░ (0.00) | Sink ░░░░ (0.00)\n"
         "Mode: ASCII | Res: 1.0 cm/px\n"
-        "Legend: []=brick, ##=stone,   =hole, FF=filter, ||=gate | Water: ~~25% ~~50% ~~75% ~~100%"
+        "Legend: ##=stone,   =space, SS=spring, OO=sink | Water: ~~25% ~~50% ~~75% ~~100%"
     )
     assert frame == expected
     assert "\x1b" not in frame

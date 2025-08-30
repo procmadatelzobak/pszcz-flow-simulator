@@ -34,14 +34,9 @@ async def test_ws_roundtrip() -> None:
             welcome = json.loads(await asyncio.wait_for(ws.recv(), timeout=1))
             assert welcome["t"] == "welcome"
             snapshot = json.loads(await asyncio.wait_for(ws.recv(), timeout=2))
-            assert "nodes" in snapshot
             assert "grid" in snapshot and "cells" in snapshot["grid"]
-            edits = [
-                {"op": "add_node", "id": "n1", "type": "source", "params": {}},
-                {"op": "add_node", "id": "n2", "type": "sink", "params": {}},
-                {"op": "add_pipe", "id": "p1", "a": "n1", "b": "n2", "params": {}},
-            ]
-            await ws.send(json.dumps({"t": "edit_batch", "seq": "2", "ts": 0, "edits": edits}))
+            ops = [{"op": "set_pixel", "r": 0, "c": 0, "material": "spring"}]
+            await ws.send(json.dumps({"t": "edit_grid", "seq": "2", "ts": 0, "ops": ops}))
             errors = []
             end = asyncio.get_running_loop().time() + 0.5
             while asyncio.get_running_loop().time() < end:
@@ -55,3 +50,4 @@ async def test_ws_roundtrip() -> None:
             assert not errors
     finally:
         await _stop(server, broadcaster, health)
+

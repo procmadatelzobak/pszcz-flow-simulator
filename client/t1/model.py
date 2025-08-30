@@ -1,16 +1,11 @@
-"""Model objects shared by the :mod:`client.t1` renderer.
-
-`MapState` holds a pixel grid. Each :class:`Pixel` stores the terrain
-`material` and current water `depth` where ``0.0`` means dry and ``1.0``
-represents a completely filled cell.
-"""
+"""Model objects shared by the :mod:`client.t1` renderer."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import List, Literal
 
-Material = Literal["brick", "stone", "hole", "filter", "gate"]
+Material = Literal["stone", "space", "spring", "sink"]
 
 
 @dataclass
@@ -20,7 +15,7 @@ class Pixel:
     Parameters
     ----------
     material:
-        One of ``"brick"``, ``"stone"``, ``"hole"``, ``"filter"`` or ``"gate"``.
+        One of ``"stone"``, ``"space"``, ``"spring"`` or ``"sink"``.
     depth:
         Fraction ``0.0–1.0`` describing how full the cell is with water.
     """
@@ -52,9 +47,9 @@ def default_map(
 ) -> MapState:
     """Create a simple map with a horizontal channel and boundary walls.
 
-    The outer rim is filled with bricks while the middle row forms an open
-    channel. The second cell of the channel contains water to act as the
-    source. Other sizes fall back to the same pattern.
+    The outer rim is filled with ``stone`` while the middle row forms an open
+    channel of ``space``. The second cell of the channel is a ``spring`` and the
+    far end contains a ``sink``.
     """
 
     grid: List[List[Pixel]] = []
@@ -62,15 +57,17 @@ def default_map(
         row: List[Pixel] = []
         for c in range(cols):
             if r in (0, rows - 1) or c in (0, cols - 1):
-                row.append(Pixel("brick", 0.0))
+                row.append(Pixel("stone", 0.0))
             else:
-                row.append(Pixel("hole", 0.0))
+                row.append(Pixel("space", 0.0))
         grid.append(row)
 
     if rows > 2 and cols > 2:
         mid = rows // 2
         for c in range(1, cols - 1):
-            grid[mid][c] = Pixel("hole", 0.0)
-        grid[mid][1].depth = 1.0  # source cell
+            grid[mid][c] = Pixel("space", 0.0)
+        grid[mid][1] = Pixel("spring", 1.0)
+        grid[mid][cols - 2] = Pixel("sink", 0.0)
 
     return MapState(rows, cols, grid, cm_per_pixel)
+
