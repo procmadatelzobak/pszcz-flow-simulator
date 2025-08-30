@@ -11,4 +11,5 @@ dependencies = [
 
 [project.scripts]
 pszcz-server = "server.net:main"
-pszcz-client = "client.net:main"
+pszcz-client = "client.t0.net:main"
+pszcz-client-t1 = "client.t1.emoji_client:main"
