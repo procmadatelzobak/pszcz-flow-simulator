@@ -104,6 +104,38 @@ save
 
 The server writes `save-*.json` in its working directory.
 
+## Automated installation
+
+A helper script [`install_pszcz.sh`](install_pszcz.sh) bootstraps the project on
+Linux systems. It clones the repository, creates isolated virtual
+environments for the server and client, installs dependencies and provides
+convenience wrappers for running or updating the software.
+
+Run with defaults:
+
+```sh
+bash install_pszcz.sh
+```
+
+Override the repository URL, installation root or entry points via
+environment variables:
+
+```sh
+REPO_URL="https://github.com/procmadatelzobak/pszcz-flow-simulator" \
+INSTALL_ROOT="/opt/pszcz" \
+SERVER_ENTRY="python -m server.net" \
+CLIENT_ENTRY="python -m client.net" \
+bash install_pszcz.sh
+```
+
+The script installs helper commands:
+
+- `pszcz-server-start` / `pszcz-server-stop`
+- `pszcz-client-start` / `pszcz-client-stop`
+- `pszcz-update` to pull the latest code and refresh dependencies
+
+Both server and client communicate on `ws://127.0.0.1:7777/ws` by default.
+
 ### Troubleshooting
 
 - Close other apps using port 7777.
