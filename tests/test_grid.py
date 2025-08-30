@@ -35,6 +35,14 @@ def test_spring_and_sink_behaviour() -> None:
     sim = SimState()
     sim.grid = [[SPixel("spring", 0.0)], [SPixel("sink", 0.5)]]
     flow_step(sim)
-    assert sim.grid[0][0].depth == 1.0  # spring refills
-    assert sim.grid[1][0].depth == 0.0  # sink drains
+    assert sim.grid[0][0].depth == 0.0  # spring empties after emission
+    assert sim.grid[1][0].depth == 0.0  # sink removes incoming water
+
+
+def test_spring_emits_water() -> None:
+    sim = SimState()
+    sim.grid = [[SPixel("spring", 0.0)], [SPixel("space", 0.0)]]
+    flow_step(sim)
+    assert sim.grid[0][0].depth == 0.0
+    assert sim.grid[1][0].depth == 1.0
 
