@@ -176,7 +176,8 @@ pszcz-server
 The server listens on `ws://127.0.0.1:7777/ws` and broadcasts full snapshots at
 the configured tick rate (default 50 Hz). On startup it auto-loads the level
 `level.smoke.pump_to_drain.v1`, a simple pump-to-drain scenario used for smoke
-testing.
+testing. Clients immediately receive the nodes and pipes from this level in the
+first snapshot.
 
 Start the console client in another terminal:
 
