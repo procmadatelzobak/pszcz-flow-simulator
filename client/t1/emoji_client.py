@@ -14,9 +14,14 @@ from . import adapter, model, serialize, view
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="t1 emoji client")
-    parser.add_argument("--mock", action="store_true", help="force mock adapter")
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--rate", type=float, default=0.5)
+    parser.add_argument(
+        "--mock",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="use mock adapter (default)",
+    )
+    parser.add_argument("--seed", type=int, default=123, help="PRNG seed")
+    parser.add_argument("--rate", type=float, default=0.8, help="mock event rate")
     parser.add_argument("--endpoint", type=str)
     parser.add_argument("--rows", type=int, default=11)
     parser.add_argument("--cols", type=int, default=36)

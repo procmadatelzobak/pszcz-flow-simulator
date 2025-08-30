@@ -7,6 +7,7 @@ INSTALL_ROOT="${INSTALL_ROOT:-/opt/pszcz}"
 REPO_DIR="${REPO_DIR:-$INSTALL_ROOT/repo}"
 SERVER_ENTRY="${SERVER_ENTRY:-server/net.py}"   # lze změnit např. na "server/app.py" nebo "python -m server.net"
 CLIENT_ENTRY="${CLIENT_ENTRY:-python -m client.t0}"
+CLIENT_T1_ENTRY="${CLIENT_T1_ENTRY:-python -m client.t1.emoji_client}"
 PY_MIN_MAJOR=3
 PY_MIN_MINOR=10
 
@@ -111,7 +112,7 @@ BASH
 # Start/stop skripty (bez systemd)
 make_runner "/usr/local/bin/pszcz-server-start" "$INSTALL_ROOT/server/venv" "$SERVER_ENTRY" "$REPO_DIR"
 make_runner "/usr/local/bin/pszcz-client-start" "$INSTALL_ROOT/client/venv" "$CLIENT_ENTRY" "$REPO_DIR"
-make_runner "/usr/local/bin/pszcz-client-start-t1" "$INSTALL_ROOT/client/venv" "python -m client.t1.emoji_client" "$REPO_DIR"
+make_runner "/usr/local/bin/pszcz-client-start-t1" "$INSTALL_ROOT/client/venv" "$CLIENT_T1_ENTRY" "$REPO_DIR"
 
 cat >/usr/local/bin/pszcz-server-stop <<'BASH'
 #!/usr/bin/env bash
