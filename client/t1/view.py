@@ -2,15 +2,20 @@ from __future__ import annotations
 
 from .model import FlowSnapshot, MapState
 
-
-def _pipe_char(flow: float, ascii: bool) -> str:
-    if ascii:
-        return "==" if flow >= 0.5 else "--"
-    if flow < 0.2:
-        return "▫️"
-    if flow < 0.6:
-        return "💧"
-    return "🌊"
+MATERIAL_EMOJI = {
+    "brick": "🧱",
+    "stone": "🪨",
+    "hole": "  ",
+    "filter": "🔳",
+    "gate": "🚪",
+}
+MATERIAL_ASCII = {
+    "brick": "[]",
+    "stone": "##",
+    "hole": "  ",
+    "filter": "FF",
+    "gate": "||",
+}
 
 
 def _bar(value: float, *, ascii: bool) -> str:
@@ -23,24 +28,18 @@ def _bar(value: float, *, ascii: bool) -> str:
 
 
 def render(state: MapState, snap: FlowSnapshot, *, ascii: bool = False, no_ansi: bool = False) -> str:
-    pump_tile = "P " if ascii else "🚰"
-    sink_tile = "S " if ascii else "🕳️"
-    empty_tile = "  " if ascii else " "
-    pipe_tile = _pipe_char(snap.flow_rate, ascii)
+    palette = MATERIAL_ASCII if ascii else MATERIAL_EMOJI
+    water_tile = "~~" if ascii else "💧"
 
     grid_lines: list[str] = []
-    for r in range(state.rows):
-        row: list[str] = []
-        for c in range(state.cols):
-            if r == state.pump.row and c == state.pump.col:
-                row.append(pump_tile)
-            elif r == state.sink.row and c == state.sink.col:
-                row.append(sink_tile)
-            elif r == state.pipe.row and state.pipe.start_col <= c <= state.pipe.end_col:
-                row.append(pipe_tile)
+    for row in state.grid:
+        rendered: list[str] = []
+        for cell in row:
+            if cell.depth > 0:
+                rendered.append(water_tile)
             else:
-                row.append(empty_tile)
-        grid_lines.append("".join(row))
+                rendered.append(palette.get(cell.material, "??"))
+        grid_lines.append("".join(rendered))
 
     alarm_line = ""
     if snap.alarm:
