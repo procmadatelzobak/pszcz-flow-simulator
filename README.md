@@ -83,6 +83,34 @@ client/
     state.py
 ```
 
+## Quick Start
+
+```sh
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m server.net &
+python -m client.net
+# then in the client:
+add_node n1 source
+add_node n2 sink
+add_pipe e1 n1 n2
+set_param n1 target_pressure 101325
+pause
+resume
+rate 40
+save
+```
+
+The server writes `save-*.json` in its working directory.
+
+### Troubleshooting
+
+- Close other apps using port 7777.
+- Requires Python 3.10+.
+- Firewalls may block localhost WebSocket traffic.
+- Stop the server with Ctrl+C.
+
 ## Running
 
 ```sh

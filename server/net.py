@@ -9,6 +9,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, Set
+from pathlib import Path
 import contextlib
 
 import websockets  # type: ignore[import-not-found]
@@ -88,6 +89,8 @@ async def _handle_client(ws: WebSocketServerProtocol, state: ServerState) -> Non
                 _apply_control(data, state.control)
             elif msg_type == "edit_batch":
                 await _apply_edit_batch(data, ws, state)
+            elif msg_type == "save":
+                asyncio.create_task(_write_save(state, data.get("note", "")))
             # Unknown message types are ignored.
     except websockets.ConnectionClosed:  # pragma: no cover - connection closed
         pass
@@ -107,6 +110,22 @@ def _apply_control(msg: Dict[str, Any], control: ControlParams) -> None:
             control.tick_hz = int(msg["tick_hz"])
         except (TypeError, ValueError):
             pass
+
+
+async def _write_save(state: ServerState, note: str) -> None:
+    """Write a full snapshot to ``save-<ts>.json`` asynchronously."""
+    snap = state.sim.snapshot()
+    data = {
+        "version": {"major": 1, "minor": 0},
+        "schema_rev": "1.0",
+        "tick": state.tick,
+        "nodes": snap["nodes"],
+        "pipes": snap["pipes"],
+        "meta": {"note": note},
+    }
+    path = Path(f"save-{_now_ms()}.json")
+    await asyncio.to_thread(path.write_text, json.dumps(data), encoding="utf-8")
+    logger.info("wrote %s", path)
 
 
 async def _apply_edit_batch(msg: Dict[str, Any], ws: WebSocketServerProtocol, state: ServerState) -> None:
