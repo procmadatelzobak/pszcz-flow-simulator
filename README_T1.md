@@ -12,11 +12,10 @@ stores a `material` and the current water `depth`:
 
 | Material | Emoji | Description |
 | --- | --- | --- |
-| `brick` | 🧱 | solid wall blocking the flow |
-| `stone` | 🪨 | immovable obstacle |
-| `hole` | _(empty)_ | free space where water may flow |
-| `filter` | 🔳 | porous block that slows water |
-| `gate` | 🚪 | controllable gate |
+| `stone` | 🪨 | solid wall blocking the flow |
+| `space` | _(empty)_ | free space where water may flow |
+| `spring` | 💧 | source emitting water |
+| `sink` | 🕳️ | drain removing water |
 
 The optional `--cm-per-pixel` parameter defines the physical size represented
 by one grid cell (default **1.0 cm**).
@@ -48,15 +47,15 @@ Options:
 
 ## Default map
 
-Without `--map` the client loads an 8×8 demo level. The outer border is built
-from bricks while the centre row forms an open channel. The second cell of the
-channel starts filled with water acting as a source and the far end represents
-the sink.
+Without `--map` the client loads an 8×8 demo level. The outer border uses
+`stone` pixels while the centre row forms an open channel of `space`. The
+second cell of the channel is a `spring` and the far end is a `sink`.
 
 ## Map format
 
 Each map defines a 2D grid where every cell specifies the material and the
-current water depth. The physical resolution `cm_per_pixel` defaults to 1.0:
+current water depth. Only `stone`, `space`, `spring` and `sink` are valid
+materials. The physical resolution `cm_per_pixel` defaults to 1.0:
 
 ```json
 {
@@ -65,14 +64,14 @@ current water depth. The physical resolution `cm_per_pixel` defaults to 1.0:
   "cm_per_pixel": 1.0,
   "grid": [
     [
-      {"material": "hole", "depth": 0.0},
-      {"material": "brick", "depth": 0.0},
-      {"material": "hole", "depth": 1.0}
+      {"material": "space", "depth": 0.0},
+      {"material": "stone", "depth": 0.0},
+      {"material": "spring", "depth": 1.0}
     ],
     [
       {"material": "stone", "depth": 0.0},
-      {"material": "hole", "depth": 0.5},
-      {"material": "filter", "depth": 0.0}
+      {"material": "space", "depth": 0.5},
+      {"material": "sink", "depth": 0.0}
     ]
   ]
 }
@@ -88,21 +87,21 @@ current water depth. The physical resolution `cm_per_pixel` defaults to 1.0:
   "grid": [
     [
       {"material": "stone", "depth": 0.0},
-      {"material": "filter", "depth": 0.0},
-      {"material": "gate", "depth": 0.0},
-      {"material": "hole", "depth": 0.0}
+      {"material": "spring", "depth": 0.0},
+      {"material": "space", "depth": 0.0},
+      {"material": "space", "depth": 0.0}
     ],
     [
-      {"material": "hole", "depth": 0.0},
-      {"material": "hole", "depth": 0.5},
-      {"material": "hole", "depth": 1.0},
-      {"material": "brick", "depth": 0.0}
+      {"material": "space", "depth": 0.0},
+      {"material": "space", "depth": 0.5},
+      {"material": "space", "depth": 1.0},
+      {"material": "stone", "depth": 0.0}
     ],
     [
-      {"material": "brick", "depth": 0.0},
-      {"material": "brick", "depth": 0.0},
-      {"material": "brick", "depth": 0.0},
-      {"material": "brick", "depth": 0.0}
+      {"material": "sink", "depth": 0.0},
+      {"material": "stone", "depth": 0.0},
+      {"material": "stone", "depth": 0.0},
+      {"material": "stone", "depth": 0.0}
     ]
   ]
 }
