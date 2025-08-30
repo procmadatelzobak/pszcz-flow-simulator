@@ -30,14 +30,13 @@ blue shades (25 % steps). Values above 1.0 are clamped to the darkest shade.
 ## Usage
 
 ```sh
-python -m client.t1.emoji_client --mock --seed 123 --rate 0.8 \
-  --rows 11 --cols 36 --fps 8
+python -m client.t1.emoji_client
 ```
 
 Options:
 
-- `--mock` – force the deterministic mock adapter (default).
-- `--seed` / `--rate` – parameters for the mock adapter.
+- `--mock` / `--no-mock` – use the deterministic mock adapter (default).
+- `--seed` / `--rate` – parameters for the mock adapter (defaults 123 and 0.8).
 - `--endpoint ws://host:port/ws` – try to use a socket adapter; if the
   connection fails the client falls back to the mock and shows an alarm.
 - `--ascii` – render using ASCII characters instead of emoji.
