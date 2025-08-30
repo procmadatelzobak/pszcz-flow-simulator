@@ -8,14 +8,31 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, Set
+from typing import Any, AsyncIterator, Dict, Protocol, Set
 from pathlib import Path
 import contextlib
 
 import websockets  # type: ignore[import-not-found]
-from websockets.server import WebSocketServerProtocol  # type: ignore[import-not-found,attr-defined]
-
 from .state import SimState
+
+
+class WSProtocol(Protocol):
+    """Protocol representing minimal WebSocket operations used by the server."""
+
+    remote_address: Any
+    request: Any
+
+    async def recv(self) -> str:  # pragma: no cover - interface only
+        ...
+
+    async def send(self, message: str) -> None:  # pragma: no cover - interface only
+        ...
+
+    async def close(self) -> None:  # pragma: no cover - interface only
+        ...
+
+    def __aiter__(self) -> AsyncIterator[str]:  # pragma: no cover - interface only
+        ...
 
 logger = logging.getLogger(__name__)
 
@@ -37,16 +54,16 @@ class ControlParams:
 class ServerState:
     """In-memory state shared across connections."""
 
-    clients: Set[WebSocketServerProtocol] = field(default_factory=set)
-    sent_counts: Dict[WebSocketServerProtocol, int] = field(default_factory=dict)
-    recv_counts: Dict[WebSocketServerProtocol, int] = field(default_factory=dict)
+    clients: Set[WSProtocol] = field(default_factory=set)
+    sent_counts: Dict[WSProtocol, int] = field(default_factory=dict)
+    recv_counts: Dict[WSProtocol, int] = field(default_factory=dict)
     seq: itertools.count = field(default_factory=lambda: itertools.count(1))
     tick: int = 0
     control: ControlParams = field(default_factory=ControlParams)
     sim: SimState = field(default_factory=SimState)
 
 
-async def _handle_client(ws: WebSocketServerProtocol, state: ServerState) -> None:
+async def _handle_client(ws: WSProtocol, state: ServerState) -> None:
     """Handle a single client connection."""
     state.clients.add(ws)
     state.sent_counts[ws] = 0
@@ -128,7 +145,7 @@ async def _write_save(state: ServerState, note: str) -> None:
     logger.info("wrote %s", path)
 
 
-async def _apply_edit_batch(msg: Dict[str, Any], ws: WebSocketServerProtocol, state: ServerState) -> None:
+async def _apply_edit_batch(msg: Dict[str, Any], ws: WSProtocol, state: ServerState) -> None:
     """Apply an edit_batch message to the simulation state."""
     edits = msg.get("edits")
     if not isinstance(edits, list):
@@ -139,7 +156,7 @@ async def _apply_edit_batch(msg: Dict[str, Any], ws: WebSocketServerProtocol, st
         await _send_error(ws, state, err["code"], "Entity id already exists" if err["code"] == "id_conflict" else "")
 
 
-async def _send_error(ws: WebSocketServerProtocol, state: ServerState, code: str, message: str) -> None:
+async def _send_error(ws: WSProtocol, state: ServerState, code: str, message: str) -> None:
     """Send an error message to a client."""
     error = {
         "t": "error",
@@ -186,7 +203,7 @@ async def start_server(host: str = "127.0.0.1", port: int = 7777):
     """Start the WebSocket server and snapshot broadcaster."""
     state = ServerState()
 
-    async def handler(ws: WebSocketServerProtocol) -> None:
+    async def handler(ws: WSProtocol) -> None:
         if ws.request.path != "/ws":
             await ws.close()
             return
