@@ -35,6 +35,7 @@ async def test_ws_roundtrip() -> None:
             assert welcome["t"] == "welcome"
             snapshot = json.loads(await asyncio.wait_for(ws.recv(), timeout=2))
             assert "nodes" in snapshot
+            assert "grid" in snapshot and "cells" in snapshot["grid"]
             edits = [
                 {"op": "add_node", "id": "n1", "type": "source", "params": {}},
                 {"op": "add_node", "id": "n2", "type": "sink", "params": {}},

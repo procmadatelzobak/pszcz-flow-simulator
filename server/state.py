@@ -1,4 +1,9 @@
-"""In-memory simulation state and edit application logic."""
+"""In-memory simulation state and edit application logic.
+
+The simulator maintains a pixel grid alongside node and pipe structures. Each
+grid cell stores a terrain ``material`` and water ``depth`` in the ``0.0–1.0``
+range.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -7,7 +12,15 @@ from typing import Any, Dict, List, Optional
 
 @dataclass
 class Pixel:
-    """Single cell in the simulation grid."""
+    """Single cell in the simulation grid.
+
+    Attributes
+    ----------
+    material:
+        One of ``brick``, ``stone``, ``hole``, ``filter`` or ``gate``.
+    depth:
+        Fraction ``0.0–1.0`` describing how full the cell is with water.
+    """
 
     material: str
     depth: float = 0.0
@@ -15,7 +28,7 @@ class Pixel:
 
 @dataclass
 class SimState:
-    """Simulation state consisting of nodes, pipes and a grid."""
+    """Simulation state consisting of nodes, pipes and a pixel grid."""
 
     nodes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     pipes: Dict[str, Dict[str, Any]] = field(default_factory=dict)

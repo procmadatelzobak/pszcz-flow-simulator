@@ -1,3 +1,9 @@
+"""JSON import/export helpers for :class:`~client.t1.model.MapState`.
+
+The file format stores `rows`, `cols`, global `cm_per_pixel` and a `grid`
+array of pixels with `material` and `depth` fields.
+"""
+
 from __future__ import annotations
 
 import json

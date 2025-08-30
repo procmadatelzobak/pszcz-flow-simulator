@@ -5,6 +5,28 @@ emoji (with an ASCII fallback). Materials and water depth are colour coded and a
 legend with the current resolution is shown. It does not accept any user input
 and terminates via `Ctrl+C`.
 
+## Pixel grid
+
+The simulation is represented as a rectangular grid of pixels. Each **pixel**
+stores a `material` and the current water `depth`:
+
+| Material | Emoji | Description |
+| --- | --- | --- |
+| `brick` | 🧱 | solid wall blocking the flow |
+| `stone` | 🪨 | immovable obstacle |
+| `hole` | _(empty)_ | free space where water may flow |
+| `filter` | 🔳 | porous block that slows water |
+| `gate` | 🚪 | controllable gate |
+
+The optional `--cm-per-pixel` parameter defines the physical size represented
+by one grid cell (default **1.0 cm**).
+
+### Water depth
+
+Water `depth` is a floating‑point value in the **0.0–1.0** range and indicates
+how much of the cell is filled with water. The renderer maps the value to four
+blue shades (25 % steps). Values above 1.0 are clamped to the darkest shade.
+
 ## Usage
 
 ```sh
@@ -50,8 +72,46 @@ current water depth. The physical resolution `cm_per_pixel` defaults to 1.0:
 }
 ```
 
-## Limitations
+### Example: mixed materials
 
-- Emoji width varies between terminals; the client assumes two-column
-  emoji which may not hold everywhere.
-- Each frame redraws the entire screen.
+```json
+{
+  "rows": 3,
+  "cols": 4,
+  "cm_per_pixel": 0.5,
+  "grid": [
+    [
+      {"material": "stone", "depth": 0.0},
+      {"material": "filter", "depth": 0.0},
+      {"material": "gate", "depth": 0.0},
+      {"material": "hole", "depth": 0.0}
+    ],
+    [
+      {"material": "hole", "depth": 0.0},
+      {"material": "hole", "depth": 0.5},
+      {"material": "hole", "depth": 1.0},
+      {"material": "brick", "depth": 0.0}
+    ],
+    [
+      {"material": "brick", "depth": 0.0},
+      {"material": "brick", "depth": 0.0},
+      {"material": "brick", "depth": 0.0},
+      {"material": "brick", "depth": 0.0}
+    ]
+  ]
+}
+```
+
+## Colour & Emoji Interface
+
+By default the client renders the grid using coloured emoji. An ASCII
+fallback can be enabled with `--ascii`.
+
+*Screenshot omitted because binary files are not stored in this repository.*
+
+### Limitations
+
+- Emoji width varies between terminals; the client assumes two-column emoji
+  which may not hold everywhere.
+- Each frame redraws the entire screen which can impact performance on slow
+  terminals.

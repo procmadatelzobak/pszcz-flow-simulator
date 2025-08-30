@@ -1,4 +1,8 @@
-"""Minimal WebSocket server for the PSZCZ Flow Simulator."""
+"""Minimal WebSocket server for the PSZCZ Flow Simulator.
+
+Broadcast snapshots include a pixel grid describing terrain materials and
+water depth.
+"""
 
 from __future__ import annotations
 
@@ -145,6 +149,7 @@ async def _write_save(state: ServerState, note: str) -> None:
         "tick": state.tick,
         "nodes": snap["nodes"],
         "pipes": snap["pipes"],
+        "grid": {"cm_per_pixel": 1.0, "cells": snap["grid"]},
         "meta": {"note": note},
     }
     path = Path(f"save-{_now_ms()}.json")
@@ -184,6 +189,7 @@ async def _broadcast_snapshots(state: ServerState) -> None:
             "t": time.time(),
             "nodes": snap["nodes"],
             "pipes": snap["pipes"],
+            "grid": {"cm_per_pixel": 1.0, "cells": snap["grid"]},
             "version": PROTOCOL_VERSION,
         }
         message = json.dumps(payload)

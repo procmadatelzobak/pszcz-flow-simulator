@@ -117,7 +117,7 @@ Both fields are optional; server applies only provided keys.
 
 ### 3.5 `snapshot` (server → clients)
 
-**MVP uses full snapshots** only. Fields included are agreed in handshake (`fields`). Minimal payload has pressures on nodes and flows on edges.
+**MVP uses full snapshots** only. Fields included are agreed in handshake (`fields`). Minimal payload has pressures on nodes and flows on edges. A pixel grid describing terrain and water depth may be included via the `grid` field.
 
 ```json
 {
@@ -131,6 +131,19 @@ Both fields are optional; server applies only provided keys.
   "pipes": [
     { "id":"e501", "a":"n123", "b":"n200", "params":{ "...": "..." }, "state": { "q": 0.18, "dir": 1 } }
   ],
+  "grid": {
+    "cm_per_pixel": 1.0,
+    "cells": [
+      [
+        {"material": "hole", "depth": 0.0},
+        {"material": "brick", "depth": 0.0}
+      ],
+      [
+        {"material": "hole", "depth": 0.5},
+        {"material": "filter", "depth": 0.0}
+      ]
+    ]
+  },
   "meta": { "solve_ms": 2.3 }
 }
 ```
@@ -188,6 +201,12 @@ Server performs an **async** save and may log the file path (MVP: no reply is re
 - **Params (MVP):** `{ "length": number, "diameter": number, "roughness": number, "open": number }`
 - **State (MVP):** `{ "q": number, "dir": -1|0|1 }`
 
+### 4.3 Grid Cell
+
+- **Required:** `material (string)`, `depth (number)`
+- **Materials:** `"brick"`, `"stone"`, `"hole"`, `"filter"`, `"gate"`
+- **Depth:** `0.0–1.0` fraction of the cell filled with water
+
 ## 5) Units & Conventions (stable in major 1)
 
 - Pressure `p`: **Pa**.  
@@ -210,6 +229,10 @@ Server performs an **async** save and may log the file path (MVP: no reply is re
   "use_features": [],
   "nodes": [ ... ],
   "pipes": [ ... ],
+  "grid": {
+    "cm_per_pixel": 1.0,
+    "cells": [ [ {"material": "hole", "depth": 0.0} ] ]
+  },
   "meta": { "note": "optional free text" }
 }
 ```
