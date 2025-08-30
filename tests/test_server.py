@@ -53,8 +53,8 @@ def test_snapshot_broadcast() -> None:
                 await asyncio.wait_for(ws.recv(), timeout=1)
                 snapshot = json.loads(await asyncio.wait_for(ws.recv(), timeout=2))
                 assert snapshot["t"] == "snapshot"
-                assert snapshot["nodes"] == []
-                assert snapshot["pipes"] == []
+                assert {n["id"] for n in snapshot["nodes"]} == {"P1", "D1"}
+                assert [p["id"] for p in snapshot["pipes"]] == ["E_P1_D1"]
                 assert snapshot["meta"] == {"solve_ms": 0}
         finally:
             server.close()

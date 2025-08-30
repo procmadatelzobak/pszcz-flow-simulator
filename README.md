@@ -149,7 +149,10 @@ Both server and client communicate on `ws://127.0.0.1:7777/ws` by default.
 python -m server.net
 ```
 
-The server listens on `ws://127.0.0.1:7777/ws` and broadcasts full snapshots at the configured tick rate (default 50 Hz).
+The server listens on `ws://127.0.0.1:7777/ws` and broadcasts full snapshots at
+the configured tick rate (default 50 Hz). On startup it auto-loads the level
+`level.smoke.pump_to_drain.v1`, a simple pump-to-drain scenario used for smoke
+testing.
 
 Start the console client in another terminal:
 
