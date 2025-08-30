@@ -67,6 +67,22 @@ This repository is a **seed**: minimal files, **complete specification**. All co
 - Proper Godot client; Web export.
 - Auth/TLS via nginx; server HTTP endpoints `/health`, `/save`, `/load`.
 
+## Project layout
+
+```
+server/
+    __init__.py
+    net.py
+    state.py
+    tick.py
+    io.py
+client/
+    __init__.py
+    net.py
+    ui.py
+    state.py
+```
+
 ## Contributing
 
 This seed repository uses a minimal continuous integration pipeline. All pull requests run:
