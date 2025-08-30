@@ -66,3 +66,22 @@ This repository is a **seed**: minimal files, **complete specification**. All co
 - Real hydraulics (sparse solvers, preconditioners), still CPU-only.
 - Proper Godot client; Web export.
 - Auth/TLS via nginx; server HTTP endpoints `/health`, `/save`, `/load`.
+
+## Contributing
+
+This seed repository uses a minimal continuous integration pipeline. All pull requests run:
+
+- `pytest -q` for the test suite (currently empty)
+- `ruff check .` for linting
+- `mypy .` for static type checks
+
+Run these commands locally before pushing changes:
+
+```sh
+pip install pytest ruff mypy
+ruff check .
+mypy .
+pytest -q
+```
+
+`mypy` may report that no Python files are present until code is added; this is expected in the seed.
