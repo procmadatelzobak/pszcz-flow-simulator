@@ -181,4 +181,8 @@ mypy .
 pytest -q
 ```
 
+The test suite includes an integration check that starts the server on the
+default port and verifies that a client can connect and receive broadcast
+snapshots.
+
 `mypy` may report that no Python files are present until code is added; this is expected in the seed.
