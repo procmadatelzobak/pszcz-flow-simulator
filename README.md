@@ -101,16 +101,7 @@ pip install -r requirements.txt
 pip install .
 python -m server.net --host 0.0.0.0 --port 7777 --health-port 7778 --tick-hz 40 &
 curl http://127.0.0.1:7778/health
-pszcz-client --url ws://127.0.0.1:7777/ws
-# then in the client:
-add_node n1 source
-add_node n2 sink
-add_pipe e1 n1 n2
-set_param n1 target_pressure 101325
-pause
-resume
-rate 40
-save
+python -m client.t1.emoji_client --endpoint ws://127.0.0.1:7777/ws
 ```
 
 The server writes `save-*.json` in its working directory.
@@ -120,14 +111,13 @@ about the running server. Example: `curl http://127.0.0.1:7778/health`.
 
 ## Clients
 
-- **t0** – original interactive client now located under `client/t0`.
-  Run with `python -m client.t0` or the `pszcz-client` wrapper.
+- **t0** – original interactive client (deprecated).
 - **t1** – read-only terminal client with emoji or ASCII output.
   It renders a colour-coded grid of material tiles with water depth and shows a
   legend including the current resolution (default 1 cm per pixel).
-  Run with `python -m client.t1.emoji_client` (wrapper: `pszcz-client-start-t1`).
+  Run with `python -m client.t1.emoji_client` (wrapper: `pszcz-client-start`).
 
-The previous client entry points were replaced with `python -m client.t0`.
+The legacy `t0` client is kept for reference only and is no longer maintained.
 
 ## Automated installation
 
@@ -149,7 +139,7 @@ environment variables:
 REPO_URL="https://github.com/procmadatelzobak/pszcz-flow-simulator" \
 INSTALL_ROOT="/opt/pszcz" \
 SERVER_ENTRY="python -m server.net" \
-CLIENT_ENTRY="python -m client.t0" \
+CLIENT_ENTRY="python -m client.t1.emoji_client" \
 bash install_pszcz.sh
 ```
 
@@ -157,7 +147,6 @@ The script installs helper commands:
 
 - `pszcz-server-start` / `pszcz-server-stop`
 - `pszcz-client-start` / `pszcz-client-stop`
-- `pszcz-client-start-t1` – run the read-only client
 - `pszcz-update` to pull the latest code and refresh dependencies
 
 Both server and client communicate on `ws://127.0.0.1:7777/ws` by default.
@@ -184,7 +173,7 @@ first snapshot.
 Start the console client in another terminal:
 
 ```sh
-pszcz-client
+pszcz-client-start
 ```
 
 The client connects, prints the welcome message, then shows each snapshot tick with a running messages-per-second rate.

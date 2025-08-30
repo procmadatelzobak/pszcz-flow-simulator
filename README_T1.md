@@ -46,6 +46,13 @@ Options:
 - `--save path.json` – export the current map to JSON.
 - `--fps 5` – set refresh rate (default 8).
 
+## Default map
+
+Without `--map` the client loads an 8×8 demo level. The outer border is built
+from bricks while the centre row forms an open channel. The second cell of the
+channel starts filled with water acting as a source and the far end represents
+the sink.
+
 ## Map format
 
 Each map defines a 2D grid where every cell specifies the material and the

@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """Model objects shared by the :mod:`client.t1` renderer.
 
 `MapState` holds a pixel grid. Each :class:`Pixel` stores the terrain
 `material` and current water `depth` where ``0.0`` means dry and ``1.0``
 represents a completely filled cell.
 """
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import List, Literal
@@ -48,9 +48,29 @@ class MapState:
 
 
 def default_map(
-    rows: int = 11, cols: int = 36, *, cm_per_pixel: float = 1.0
+    rows: int = 8, cols: int = 8, *, cm_per_pixel: float = 1.0
 ) -> MapState:
-    grid: List[List[Pixel]] = [
-        [Pixel("hole", 0.0) for _ in range(cols)] for _ in range(rows)
-    ]
+    """Create a simple map with a horizontal channel and boundary walls.
+
+    The outer rim is filled with bricks while the middle row forms an open
+    channel. The second cell of the channel contains water to act as the
+    source. Other sizes fall back to the same pattern.
+    """
+
+    grid: List[List[Pixel]] = []
+    for r in range(rows):
+        row: List[Pixel] = []
+        for c in range(cols):
+            if r in (0, rows - 1) or c in (0, cols - 1):
+                row.append(Pixel("brick", 0.0))
+            else:
+                row.append(Pixel("hole", 0.0))
+        grid.append(row)
+
+    if rows > 2 and cols > 2:
+        mid = rows // 2
+        for c in range(1, cols - 1):
+            grid[mid][c] = Pixel("hole", 0.0)
+        grid[mid][1].depth = 1.0  # source cell
+
     return MapState(rows, cols, grid, cm_per_pixel)

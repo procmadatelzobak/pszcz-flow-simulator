@@ -6,8 +6,7 @@ REPO_URL="${REPO_URL:-https://github.com/procmadatelzobak/pszcz-flow-simulator}"
 INSTALL_ROOT="${INSTALL_ROOT:-/opt/pszcz}"
 REPO_DIR="${REPO_DIR:-$INSTALL_ROOT/repo}"
 SERVER_ENTRY="${SERVER_ENTRY:-server/net.py}"   # lze změnit např. na "server/app.py" nebo "python -m server.net"
-CLIENT_ENTRY="${CLIENT_ENTRY:-python -m client.t0}"
-CLIENT_T1_ENTRY="${CLIENT_T1_ENTRY:-python -m client.t1.emoji_client}"
+CLIENT_ENTRY="${CLIENT_ENTRY:-python -m client.t1.emoji_client}"
 PY_MIN_MAJOR=3
 PY_MIN_MINOR=10
 
@@ -112,7 +111,6 @@ BASH
 # Start/stop skripty (bez systemd)
 make_runner "/usr/local/bin/pszcz-server-start" "$INSTALL_ROOT/server/venv" "$SERVER_ENTRY" "$REPO_DIR"
 make_runner "/usr/local/bin/pszcz-client-start" "$INSTALL_ROOT/client/venv" "$CLIENT_ENTRY" "$REPO_DIR"
-make_runner "/usr/local/bin/pszcz-client-start-t1" "$INSTALL_ROOT/client/venv" "$CLIENT_T1_ENTRY" "$REPO_DIR"
 
 cat >/usr/local/bin/pszcz-server-stop <<'BASH'
 #!/usr/bin/env bash
@@ -126,8 +124,6 @@ chmod +x /usr/local/bin/pszcz-server-stop
 cat >/usr/local/bin/pszcz-client-stop <<'BASH'
 #!/usr/bin/env bash
 set -Eeuo pipefail
-pkill -f "client/t0/net.py" 2>/dev/null || true
-pkill -f "python -m client.t0" 2>/dev/null || true
 pkill -f "client/t1/emoji_client.py" 2>/dev/null || true
 pkill -f "python -m client.t1.emoji_client" 2>/dev/null || true
 echo "Klient zastaven (pokud běžel)."
