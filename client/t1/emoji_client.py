@@ -1,3 +1,9 @@
+"""Command-line client rendering the pixel grid using emoji or ASCII.
+
+Supports optional WebSocket connection, map import/export and configurable
+physical resolution via ``--cm-per-pixel``.
+"""
+
 from __future__ import annotations
 
 import argparse
