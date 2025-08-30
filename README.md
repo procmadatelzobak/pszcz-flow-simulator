@@ -89,8 +89,10 @@ client/
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m server.net &
-python -m client.net
+pip install .
+pszcz-server &
+curl http://127.0.0.1:7777/health
+pszcz-client --url ws://127.0.0.1:7777/ws
 # then in the client:
 add_node n1 source
 add_node n2 sink
@@ -138,15 +140,15 @@ Both server and client communicate on `ws://127.0.0.1:7777/ws` by default.
 
 ### Troubleshooting
 
-- Close other apps using port 7777.
-- Requires Python 3.10+.
+- Another application may already use port 7777.
+- Ensure the virtual environment is activated.
 - Firewalls may block localhost WebSocket traffic.
 - Stop the server with Ctrl+C.
 
 ## Running
 
 ```sh
-python -m server.net
+pszcz-server
 ```
 
 The server listens on `ws://127.0.0.1:7777/ws` and broadcasts full snapshots at
@@ -157,7 +159,7 @@ testing.
 Start the console client in another terminal:
 
 ```sh
-python -m client.net
+pszcz-client
 ```
 
 The client connects, prints the welcome message, then shows each snapshot tick with a running messages-per-second rate.

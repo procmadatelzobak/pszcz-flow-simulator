@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import contextlib
 import json
@@ -146,31 +147,38 @@ async def _input_loop(ws, seq: Seq) -> None:
         await ws.send(json.dumps(msg))
 
 
-async def main() -> None:
+def main() -> None:
     """Connect to the server and interact via text commands."""
+
+    parser = argparse.ArgumentParser(description="PSZCZ Flow Simulator client")
+    parser.add_argument("--url", default="ws://127.0.0.1:7777/ws")
+    args = parser.parse_args()
 
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
     )
-    uri = "ws://127.0.0.1:7777/ws"
-    seq = Seq()
-    hello = build_hello(seq.next())
-    async with websockets.connect(uri) as ws:  # type: ignore[arg-type]
-        await ws.send(json.dumps(hello))
-        welcome = json.loads(await ws.recv())
-        print(welcome)
 
-        recv_task = asyncio.create_task(_recv_loop(ws))
-        send_task = asyncio.create_task(_input_loop(ws, seq))
-        done, pending = await asyncio.wait(
-            [recv_task, send_task], return_when=asyncio.FIRST_COMPLETED
-        )
-        for task in pending:
-            task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await task
+    async def runner() -> None:
+        seq = Seq()
+        hello = build_hello(seq.next())
+        async with websockets.connect(args.url) as ws:  # type: ignore[arg-type]
+            await ws.send(json.dumps(hello))
+            welcome = json.loads(await ws.recv())
+            print(welcome)
+
+            recv_task = asyncio.create_task(_recv_loop(ws))
+            send_task = asyncio.create_task(_input_loop(ws, seq))
+            done, pending = await asyncio.wait(
+                [recv_task, send_task], return_when=asyncio.FIRST_COMPLETED
+            )
+            for task in pending:
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+
+    asyncio.run(runner())
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
 

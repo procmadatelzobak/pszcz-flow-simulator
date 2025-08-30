@@ -1,0 +1,14 @@
+[project]
+name = "pszcz-flow-simulator"
+version = "0.1.0"
+description = "PSZCZ Flow Simulator MVP"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+dependencies = [
+    "websockets==12.0",
+]
+
+[project.scripts]
+pszcz-server = "server.net:main"
+pszcz-client = "client.net:main"
