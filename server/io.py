@@ -1,38 +1,33 @@
 """Input/output utilities for the server."""
+
 from __future__ import annotations
 
-from pathlib import Path
 import json
+from pathlib import Path
 from typing import Any
 
-from .state import SimState
+from .state import Pixel, SimState
 
 
 def load_level(path: str | Path, sim: SimState) -> None:
     """Load a level file into ``sim``.
 
-    The level schema is a JSON document containing ``nodes`` and ``pipes``
-    arrays. All extra fields on nodes and pipes are stored inside the
-    ``params`` mapping of :class:`SimState` entries so the simulation can
-    evolve without a fixed schema.
+    The level schema is a JSON document containing a ``grid`` object with a
+    ``cells`` array describing the pixel materials and water depths. Unknown
+    fields are ignored to allow forward compatibility.
     """
+
     data: dict[str, Any] = json.loads(Path(path).read_text(encoding="utf-8"))
-    sim.nodes = {}
-    sim.pipes = {}
-    for node in data.get("nodes", []):
-        params = {k: v for k, v in node.items() if k not in {"id", "type"}}
-        sim.nodes[node["id"]] = {
-            "id": node["id"],
-            "type": node.get("type", "junction"),
-            "params": params,
-            "state": {"p": 0},
-        }
-    for pipe in data.get("pipes", []):
-        params = {k: v for k, v in pipe.items() if k not in {"id", "a", "b"}}
-        sim.pipes[pipe["id"]] = {
-            "id": pipe["id"],
-            "a": pipe["a"],
-            "b": pipe["b"],
-            "params": params,
-            "state": {"q": 0, "dir": 0},
-        }
+    grid = data.get("grid")
+    if isinstance(grid, dict):
+        cells = grid.get("cells")
+    else:
+        cells = grid
+    sim.grid = [
+        [
+            Pixel(str(cell.get("material", "space")), float(cell.get("depth", 0.0)))
+            for cell in row
+        ]
+        for row in cells or []
+    ]
+

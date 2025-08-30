@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from __future__ import annotations
-
 import sys
 from pathlib import Path
 
@@ -15,11 +13,11 @@ from server.tick import flow_step
 
 def test_map_serialization_roundtrip() -> None:
     state = default_map(2, 2, cm_per_pixel=1.0)
-    state.grid[0][0].material = "hole"
+    state.grid[0][0].material = "space"
     state.grid[0][0].depth = 1.0
     data = export_map(state)
     loaded = import_map(data)
-    assert loaded.grid[0][0].material == "hole"
+    assert loaded.grid[0][0].material == "space"
     assert loaded.grid[0][0].depth == 1.0
     assert data["cm_per_pixel"] == 1.0
     assert loaded.cm_per_pixel == 1.0
@@ -27,15 +25,16 @@ def test_map_serialization_roundtrip() -> None:
 
 def test_water_flows_down() -> None:
     sim = SimState()
-    sim.grid = [[SPixel("hole", 1.0)], [SPixel("hole", 0.0)]]
+    sim.grid = [[SPixel("space", 1.0)], [SPixel("space", 0.0)]]
     flow_step(sim)
     assert sim.grid[0][0].depth == 0.0
     assert sim.grid[1][0].depth == 1.0
 
 
-def test_filter_reduces_flow() -> None:
+def test_spring_and_sink_behaviour() -> None:
     sim = SimState()
-    sim.grid = [[SPixel("filter", 1.0)], [SPixel("hole", 0.0)]]
+    sim.grid = [[SPixel("spring", 0.0)], [SPixel("sink", 0.5)]]
     flow_step(sim)
-    assert sim.grid[0][0].depth == 0.5
-    assert sim.grid[1][0].depth == 0.5
+    assert sim.grid[0][0].depth == 1.0  # spring refills
+    assert sim.grid[1][0].depth == 0.0  # sink drains
+

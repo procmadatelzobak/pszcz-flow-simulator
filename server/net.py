@@ -1,9 +1,3 @@
-"""Minimal WebSocket server for the PSZCZ Flow Simulator.
-
-Broadcast snapshots include a pixel grid describing terrain materials and
-water depth.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -19,9 +13,10 @@ from typing import Any, AsyncIterator, Dict, Protocol, Set
 
 import websockets  # type: ignore[import-not-found]
 from aiohttp import web
+
 from . import __version__
-from .state import SimState
 from .io import load_level
+from .state import Pixel, SimState
 
 
 class WSProtocol(Protocol):
@@ -42,13 +37,15 @@ class WSProtocol(Protocol):
     def __aiter__(self) -> AsyncIterator[str]:  # pragma: no cover - interface only
         ...
 
+
 logger = logging.getLogger(__name__)
 
-PROTOCOL_VERSION = "mvp-0"
+PROTOCOL_VERSION = "2.0"
 
 
 def _now_ms() -> int:
     """Return current time in milliseconds since Unix epoch."""
+
     return int(time.time() * 1000)
 
 
@@ -76,6 +73,7 @@ class ServerState:
 
 async def _handle_client(ws: WSProtocol, state: ServerState) -> None:
     """Handle a single client connection."""
+
     state.clients.add(ws)
     state.sent_counts[ws] = 0
     state.recv_counts[ws] = 0
@@ -96,12 +94,10 @@ async def _handle_client(ws: WSProtocol, state: ServerState) -> None:
             "t": "welcome",
             "seq": str(next(state.seq)),
             "ts": _now_ms(),
-            "version": {"major": 1, "minor": 0},
-            "schema_rev": "1.0",
-            "fields": ["node.p", "edge.q"],
-            "use_features": [],
+            "version": {"major": 2, "minor": 0},
+            "schema_rev": "2.0",
             "tick_hz": state.control.tick_hz,
-            "server_version": "0.1.0",
+            "server_version": "0.2.0",
         }
         await ws.send(json.dumps(welcome))
         state.sent_counts[ws] += 1
@@ -115,8 +111,8 @@ async def _handle_client(ws: WSProtocol, state: ServerState) -> None:
             msg_type = data.get("t")
             if msg_type == "control":
                 _apply_control(data, state.control)
-            elif msg_type == "edit_batch":
-                await _apply_edit_batch(data, ws, state)
+            elif msg_type == "edit_grid":
+                await _apply_edit_grid(data, ws, state)
             elif msg_type == "save":
                 asyncio.create_task(_write_save(state, data.get("note", "")))
             # Unknown message types are ignored.
@@ -126,11 +122,14 @@ async def _handle_client(ws: WSProtocol, state: ServerState) -> None:
         state.clients.discard(ws)
         sent = state.sent_counts.pop(ws, 0)
         recv = state.recv_counts.pop(ws, 0)
-        logger.info("client disconnected %s sent=%d recv=%d", ws.remote_address, sent, recv)
+        logger.info(
+            "client disconnected %s sent=%d recv=%d", ws.remote_address, sent, recv
+        )
 
 
 def _apply_control(msg: Dict[str, Any], control: ControlParams) -> None:
     """Update control parameters from a control message."""
+
     if "pause" in msg:
         control.pause = bool(msg["pause"])
     if "tick_hz" in msg:
@@ -142,13 +141,12 @@ def _apply_control(msg: Dict[str, Any], control: ControlParams) -> None:
 
 async def _write_save(state: ServerState, note: str) -> None:
     """Write a full snapshot to ``save-<ts>.json`` asynchronously."""
+
     snap = state.sim.snapshot()
     data = {
-        "version": {"major": 1, "minor": 0},
-        "schema_rev": "1.0",
+        "version": {"major": 2, "minor": 0},
+        "schema_rev": "2.0",
         "tick": state.tick,
-        "nodes": snap["nodes"],
-        "pipes": snap["pipes"],
         "grid": {"cm_per_pixel": 1.0, "cells": snap["grid"]},
         "meta": {"note": note},
     }
@@ -157,19 +155,19 @@ async def _write_save(state: ServerState, note: str) -> None:
     logger.info("wrote %s", path)
 
 
-async def _apply_edit_batch(msg: Dict[str, Any], ws: WSProtocol, state: ServerState) -> None:
-    """Apply an edit_batch message to the simulation state."""
-    edits = msg.get("edits")
+async def _apply_edit_grid(msg: Dict[str, Any], ws: WSProtocol, state: ServerState) -> None:
+    edits = msg.get("ops")
     if not isinstance(edits, list):
         await _send_error(ws, state, "bad_request", "Malformed edits")
         return
     err = state.sim.apply_edits(edits)
     if err:
-        await _send_error(ws, state, err["code"], "Entity id already exists" if err["code"] == "id_conflict" else "")
+        await _send_error(ws, state, err["code"], "")
 
 
 async def _send_error(ws: WSProtocol, state: ServerState, code: str, message: str) -> None:
     """Send an error message to a client."""
+
     error = {
         "t": "error",
         "seq": str(next(state.seq)),
@@ -183,12 +181,14 @@ async def _send_error(ws: WSProtocol, state: ServerState, code: str, message: st
 
 async def _broadcast_snapshots(state: ServerState) -> None:
     """Broadcast snapshots of the current simulation state."""
+
     while True:
         snap = state.sim.snapshot()
         payload = {
-            "t": time.time(),
-            "nodes": snap["nodes"],
-            "pipes": snap["pipes"],
+            "t": "snapshot",
+            "seq": str(next(state.seq)),
+            "ts": _now_ms(),
+            "tick": state.tick,
             "grid": {"cm_per_pixel": 1.0, "cells": snap["grid"]},
             "version": PROTOCOL_VERSION,
         }
@@ -212,12 +212,8 @@ async def start_server(
     level_path: str | Path | None = None,
     health_port: int = 7778,
 ):
-    """Start the WebSocket and health servers plus snapshot broadcaster.
+    """Start the WebSocket and health servers plus snapshot broadcaster."""
 
-    A level file is loaded into the simulation before accepting clients. If
-    ``level_path`` is ``None`` or the file is missing, the simulation starts
-    empty.
-    """
     state = ServerState()
     state.control.tick_hz = int(tick_hz)
     state.snapshot_hz = snapshot_hz
@@ -226,6 +222,8 @@ async def start_server(
             load_level(level_path, state.sim)
         except FileNotFoundError:
             logger.warning("level file %s not found; starting empty", level_path)
+    if not state.sim.grid:
+        state.sim.grid = [[Pixel("space", 0.0)]]
 
     async def handler(ws: Any) -> None:
         path = getattr(ws, "path", None)
@@ -262,14 +260,12 @@ async def start_server(
 
 def main() -> None:
     """Run the server until interrupted."""
+
     parser = argparse.ArgumentParser(description="PSZCZ Flow Simulator server")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=7777)
     parser.add_argument("--health-port", type=int, default=7778)
-    parser.add_argument(
-        "--level",
-        default="levels/level.smoke.pump_to_drain.v1.json",
-    )
+    parser.add_argument("--level", default="levels/level.smoke.pump_to_drain.v1.json")
     parser.add_argument("--tick-hz", type=int, default=50)
     args = parser.parse_args()
 
@@ -296,3 +292,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
