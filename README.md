@@ -94,7 +94,7 @@ This seed repository uses a minimal continuous integration pipeline. All pull re
 Run these commands locally before pushing changes:
 
 ```sh
-pip install pytest ruff mypy
+pip install -r requirements.txt ruff mypy
 ruff check .
 mypy .
 pytest -q
