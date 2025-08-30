@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, AsyncIterator, Dict, Protocol, Set
 
 import websockets  # type: ignore[import-not-found]
+from aiohttp import web
 from . import __version__
 from .state import SimState
 from .io import load_level
@@ -202,8 +203,9 @@ async def start_server(
     tick_hz: float = 50.0,
     snapshot_hz: float = 20.0,
     level_path: str | Path | None = None,
+    health_port: int = 7778,
 ):
-    """Start the WebSocket server and snapshot broadcaster.
+    """Start the WebSocket and health servers plus snapshot broadcaster.
 
     A level file is loaded into the simulation before accepting clients. If
     ``level_path`` is ``None`` or the file is missing, the simulation starts
@@ -219,25 +221,36 @@ async def start_server(
             logger.warning("level file %s not found; starting empty", level_path)
 
     async def handler(ws: Any) -> None:
-        if getattr(ws, "path", "") != "/ws":
+        path = getattr(ws, "path", None)
+        if path is None:
+            req = getattr(ws, "request", None)
+            path = getattr(req, "path", None) if req else None
+        if path != "/ws":
             await ws.close()
             return
         await _handle_client(ws, state)
 
-    async def _process_request(
-        path: str, request_headers: Any
-    ) -> tuple[int, list[tuple[str, str]], bytes] | None:
-        if path == "/health":
-            body = json.dumps({"ok": True, "version": __version__}).encode()
-            headers = [("Content-Type", "application/json"), ("Content-Length", str(len(body)))]
-            return 200, headers, body
-        return None
+    app = web.Application()
 
-    server = await websockets.serve(
-        handler, host, port, process_request=_process_request
-    )  # type: ignore[arg-type]
+    async def _health(_: web.Request) -> web.Response:
+        return web.json_response(
+            {
+                "ok": True,
+                "version": __version__,
+                "tick_hz": state.control.tick_hz,
+                "clients": len(state.clients),
+            }
+        )
+
+    app.router.add_get("/health", _health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host, health_port)
+    await site.start()
+
+    server = await websockets.serve(handler, host, port)  # type: ignore[arg-type]
     broadcaster = asyncio.create_task(_broadcast_snapshots(state))
-    return server, broadcaster
+    return server, broadcaster, runner
 
 
 def main() -> None:
@@ -245,22 +258,23 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="PSZCZ Flow Simulator server")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=7777)
-    parser.add_argument("--tick-hz", type=float, default=50.0)
-    parser.add_argument("--snapshot-hz", type=float, default=20.0)
-    parser.add_argument("--log-level", default="INFO")
+    parser.add_argument("--health-port", type=int, default=7778)
+    parser.add_argument(
+        "--level",
+        default="levels/level.smoke.pump_to_drain.v1.json",
+    )
+    parser.add_argument("--tick-hz", type=int, default=50)
     args = parser.parse_args()
 
-    logging.basicConfig(
-        level=getattr(logging, args.log_level.upper(), logging.INFO),
-        format="%(asctime)s %(levelname)s %(message)s",
-    )
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     async def runner() -> None:
-        server, broadcaster = await start_server(
+        server, broadcaster, health = await start_server(
             host=args.host,
             port=args.port,
             tick_hz=args.tick_hz,
-            snapshot_hz=args.snapshot_hz,
+            level_path=args.level,
+            health_port=args.health_port,
         )
         try:
             await server.wait_closed()
@@ -268,6 +282,7 @@ def main() -> None:
             broadcaster.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await broadcaster
+            await health.cleanup()
 
     asyncio.run(runner())
 

@@ -99,8 +99,8 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install .
-pszcz-server &
-curl http://127.0.0.1:7777/health
+python -m server.net --host 0.0.0.0 --port 7777 --health-port 7778 --tick-hz 40 &
+curl http://127.0.0.1:7778/health
 pszcz-client --url ws://127.0.0.1:7777/ws
 # then in the client:
 add_node n1 source
@@ -114,6 +114,9 @@ save
 ```
 
 The server writes `save-*.json` in its working directory.
+
+The HTTP endpoint `GET /health` on port 7778 reports basic status information
+about the running server. Example: `curl http://127.0.0.1:7778/health`.
 
 ## Clients
 
