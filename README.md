@@ -120,6 +120,10 @@ about the running server. Example: `curl http://127.0.0.1:7778/health`.
 ## Clients
 
 - **t0** – original interactive client (deprecated).
+  It understands simple text commands such as:
+  - `set_pixel r c material [depth]` – change cell material and optional water level
+  - `set_depth r c value` – adjust water depth while keeping the current material
+  - `pause` / `resume`, `rate HZ`, `save`
 - **t1** – read-only terminal client with emoji or ASCII output.
   It renders a colour-coded grid of material tiles with water depth and shows a
   legend including the current resolution (default 1 cm per pixel).
