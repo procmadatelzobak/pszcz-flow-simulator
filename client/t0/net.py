@@ -12,10 +12,15 @@ import time
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
+from .state import ClientState
+
 import websockets  # type: ignore[import-not-found]
 
 
 logger = logging.getLogger(__name__)
+
+# Allowed pixel materials in the simulator.
+NODE_TYPES = ["stone", "space", "spring", "sink"]
 
 
 def _now_ms() -> int:
@@ -47,7 +52,7 @@ def build_hello(seq: str = "1") -> Dict[str, Any]:
     }
 
 
-def parse_command(line: str, seq: Seq) -> Optional[Dict[str, Any]]:
+def parse_command(line: str, seq: Seq, state: ClientState) -> Optional[Dict[str, Any]]:
     """Parse a command line into a protocol message."""
 
     parts = line.strip().split()
@@ -55,23 +60,36 @@ def parse_command(line: str, seq: Seq) -> Optional[Dict[str, Any]]:
         return None
     cmd = parts[0]
     ts = _now_ms()
-    if cmd == "set" and len(parts) in {4, 5}:
+    if cmd == "set_pixel" and len(parts) in {4, 5}:
         try:
             r = int(parts[1])
             c = int(parts[2])
         except ValueError:
             return None
+        material = parts[3]
+        if material not in NODE_TYPES:
+            return None
         op: Dict[str, Any] = {
             "op": "set_pixel",
             "r": r,
             "c": c,
-            "material": parts[3],
+            "material": material,
         }
         if len(parts) == 5:
             try:
                 op["depth"] = float(parts[4])
             except ValueError:
                 return None
+        return {"t": "edit_grid", "seq": seq.next(), "ts": ts, "ops": [op]}
+    if cmd == "set_depth" and len(parts) == 4:
+        try:
+            r = int(parts[1])
+            c = int(parts[2])
+            depth = float(parts[3])
+        except ValueError:
+            return None
+        material = state.material_at(r, c)
+        op = {"op": "set_pixel", "r": r, "c": c, "material": material, "depth": depth}
         return {"t": "edit_grid", "seq": seq.next(), "ts": ts, "ops": [op]}
     if cmd == "pause" and len(parts) == 1:
         return {"t": "control", "seq": seq.next(), "ts": ts, "pause": True}
@@ -88,7 +106,7 @@ def parse_command(line: str, seq: Seq) -> Optional[Dict[str, Any]]:
     return None
 
 
-async def _recv_loop(ws) -> None:
+async def _recv_loop(ws, state: ClientState) -> None:
     start = time.monotonic()
     count = 0
     async for raw in ws:
@@ -98,21 +116,26 @@ async def _recv_loop(ws) -> None:
             continue
         t = msg.get("t")
         if t == "snapshot":
+            state.update(msg)
             count += 1
             elapsed = time.monotonic() - start
             rate = count / elapsed if elapsed else 0.0
+            grid = state.grid
+            for row in grid:
+                line = "".join(cell.get("material", "?")[0] for cell in row)
+                print(line)
             print(f"rate={rate:.1f} msg/s")
         elif t == "error":
             print(json.dumps(msg))
 
 
-async def _input_loop(ws, seq: Seq) -> None:
+async def _input_loop(ws, seq: Seq, state: ClientState) -> None:
     loop = asyncio.get_running_loop()
     while True:
         line = await loop.run_in_executor(None, sys.stdin.readline)
         if not line:
             break
-        msg = parse_command(line, seq)
+        msg = parse_command(line, seq, state)
         if msg is None:
             print("?")
             continue
@@ -132,14 +155,15 @@ def main() -> None:
 
     async def runner() -> None:
         seq = Seq()
+        state = ClientState()
         hello = build_hello(seq.next())
         async with websockets.connect(args.url) as ws:  # type: ignore[arg-type]
             await ws.send(json.dumps(hello))
             welcome = json.loads(await ws.recv())
             print(welcome)
 
-            recv_task = asyncio.create_task(_recv_loop(ws))
-            send_task = asyncio.create_task(_input_loop(ws, seq))
+            recv_task = asyncio.create_task(_recv_loop(ws, state))
+            send_task = asyncio.create_task(_input_loop(ws, seq, state))
             done, pending = await asyncio.wait(
                 [recv_task, send_task], return_when=asyncio.FIRST_COMPLETED
             )
