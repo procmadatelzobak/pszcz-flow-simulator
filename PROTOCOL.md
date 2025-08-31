@@ -112,7 +112,6 @@ Both fields are optional; server applies only provided keys.
   "t": "snapshot",
   "seq": "100",
   "ts": 0,
-  "tick": 12345,
   "grid": {
     "cm_per_pixel": 1.0,
     "cells": [
@@ -170,15 +169,10 @@ Server performs an **async** save and may log the file path (MVP: no reply is re
 
 ## 6) Saves (MVP)
 
-**File format:** one JSON object (UTF-8).
-**Required top-level fields:**
+**File format:** one JSON object (UTF-8) containing only the grid and optional metadata.
 
 ```json
 {
-  "version": { "major": 2, "minor": 0 },
-  "schema_rev": "2.0",
-  "ts": 0,
-  "tick": 12345,
   "grid": {
     "cm_per_pixel": 1.0,
     "cells": [ [ {"material": "space", "depth": 0.0} ] ]
