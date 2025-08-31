@@ -169,14 +169,15 @@ Server performs an **async** save and may log the file path (MVP: no reply is re
 
 ## 6) Saves (MVP)
 
-**File format:** one JSON object (UTF-8) containing only the grid and optional metadata.
+**File format:** one JSON object (UTF-8) containing grid dimensions and pixel
+data with optional metadata.
 
 ```json
 {
-  "grid": {
-    "cm_per_pixel": 1.0,
-    "cells": [ [ {"material": "space", "depth": 0.0} ] ]
-  },
+  "rows": 1,
+  "cols": 1,
+  "cm_per_pixel": 1.0,
+  "grid": [ [ { "material": "space", "depth": 0.0 } ] ],
   "meta": { "note": "optional free text" }
 }
 ```
