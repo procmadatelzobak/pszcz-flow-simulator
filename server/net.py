@@ -15,7 +15,7 @@ import websockets  # type: ignore[import-not-found]
 from aiohttp import web
 
 from . import __version__
-from .io import load_level
+from .io import load_level, save_level
 from .state import Pixel, SimState
 
 
@@ -156,13 +156,9 @@ def _apply_control(msg: Dict[str, Any], control: ControlParams) -> None:
 async def _write_save(state: ServerState, note: str) -> None:
     """Write a full snapshot to ``save-<ts>.json`` asynchronously."""
 
-    snap = state.sim.snapshot()
-    data = {
-        "grid": {"cm_per_pixel": 1.0, "cells": snap["grid"]},
-        "meta": {"note": note} if note else {},
-    }
+    meta = {"note": note} if note else None
     path = Path(f"save-{_now_ms()}.json")
-    await asyncio.to_thread(path.write_text, json.dumps(data), encoding="utf-8")
+    await asyncio.to_thread(save_level, path, state.sim, meta=meta)
     logger.info("wrote %s", path)
 
 

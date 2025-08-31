@@ -1,13 +1,10 @@
 {
-  "level_id": "level.sample.v1",
-  "grid": {
-    "cm_per_pixel": 1.0,
-    "cells": [
-      [ { "material": "spring", "depth": 0.0 }, { "material": "space", "depth": 0.0 } ],
-      [ { "material": "sink", "depth": 0.0 }, { "material": "space", "depth": 0.0 } ]
-    ]
-  },
-  "hints": [
-    "This is a minimal test grid."
+  "rows": 2,
+  "cols": 2,
+  "cm_per_pixel": 1.0,
+  "grid": [
+    [ { "material": "spring", "depth": 0.0 }, { "material": "space", "depth": 0.0 } ],
+    [ { "material": "sink", "depth": 0.0 }, { "material": "space", "depth": 0.0 } ]
   ]
 }
+
