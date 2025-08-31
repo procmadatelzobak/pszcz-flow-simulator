@@ -60,10 +60,6 @@ class SimState:
         --------------------
         ``set_pixel``
             ``{"op":"set_pixel","r":int,"c":int,"material":str,"depth":float?}``
-        ``fill``
-            ``{"op":"fill","r":int,"c":int}`` – set depth to ``1.0``.
-        ``drain``
-            ``{"op":"drain","r":int,"c":int}`` – set depth to ``0.0``.
 
         Returns ``None`` on success or an error ``{"code": str}`` mapping on
         failure.
@@ -93,10 +89,6 @@ class SimState:
                         cell.depth = max(0.0, min(1.0, float(depth)))
                     except (TypeError, ValueError):
                         return {"code": "bad_request"}
-            elif op == "fill":
-                cell.depth = 1.0
-            elif op == "drain":
-                cell.depth = 0.0
             else:
                 return {"code": "bad_request"}
 

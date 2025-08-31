@@ -10,21 +10,12 @@ import logging
 import sys
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, Optional
 
 import websockets  # type: ignore[import-not-found]
 
 
 logger = logging.getLogger(__name__)
-
-NODE_TYPES: Set[str] = {
-    "source",
-    "sink",
-    "junction",
-    "pump",
-    "valve",
-    "accumulator",
-}
 
 
 def _now_ms() -> int:
@@ -50,12 +41,9 @@ def build_hello(seq: str = "1") -> Dict[str, Any]:
         "t": "hello",
         "seq": seq,
         "ts": _now_ms(),
-        "accept_major": [1],
+        "accept_major": [2],
         "min_minor": 0,
-        "id_type": "string",
-        "accept_features": [],
-        "want_fields": ["node.p", "edge.q"],
-        "client_version": "0.1.0",
+        "client_version": "0.2.0",
     }
 
 
@@ -67,39 +55,24 @@ def parse_command(line: str, seq: Seq) -> Optional[Dict[str, Any]]:
         return None
     cmd = parts[0]
     ts = _now_ms()
-    if cmd == "add_node" and len(parts) == 3 and parts[2] in NODE_TYPES:
-        edit = {
-            "op": "add_node",
-            "id": parts[1],
-            "type": parts[2],
-            "params": {},
-        }
-        return {"t": "edit_batch", "seq": seq.next(), "ts": ts, "edits": [edit]}
-    if cmd == "add_pipe" and len(parts) == 4:
-        edit = {
-            "op": "add_pipe",
-            "id": parts[1],
-            "a": parts[2],
-            "b": parts[3],
-            "params": {},
-        }
-        return {"t": "edit_batch", "seq": seq.next(), "ts": ts, "edits": [edit]}
-    if cmd == "set_param" and len(parts) >= 4:
-        value_str = " ".join(parts[3:])
+    if cmd == "set" and len(parts) in {4, 5}:
         try:
-            value = json.loads(value_str)
-        except json.JSONDecodeError:
-            value = value_str
-        edit = {
-            "op": "set_param",
-            "id": parts[1],
-            "key": parts[2],
-            "value": value,
+            r = int(parts[1])
+            c = int(parts[2])
+        except ValueError:
+            return None
+        op: Dict[str, Any] = {
+            "op": "set_pixel",
+            "r": r,
+            "c": c,
+            "material": parts[3],
         }
-        return {"t": "edit_batch", "seq": seq.next(), "ts": ts, "edits": [edit]}
-    if cmd == "del" and len(parts) == 2:
-        edit = {"op": "del", "id": parts[1]}
-        return {"t": "edit_batch", "seq": seq.next(), "ts": ts, "edits": [edit]}
+        if len(parts) == 5:
+            try:
+                op["depth"] = float(parts[4])
+            except ValueError:
+                return None
+        return {"t": "edit_grid", "seq": seq.next(), "ts": ts, "ops": [op]}
     if cmd == "pause" and len(parts) == 1:
         return {"t": "control", "seq": seq.next(), "ts": ts, "pause": True}
     if cmd == "resume" and len(parts) == 1:
@@ -128,8 +101,7 @@ async def _recv_loop(ws) -> None:
             count += 1
             elapsed = time.monotonic() - start
             rate = count / elapsed if elapsed else 0.0
-            tick = msg.get("tick")
-            print(f"tick={tick} rate={rate:.1f} msg/s")
+            print(f"rate={rate:.1f} msg/s")
         elif t == "error":
             print(json.dumps(msg))
 

@@ -41,6 +41,8 @@ class WSProtocol(Protocol):
 logger = logging.getLogger(__name__)
 
 PROTOCOL_VERSION = "2.0"
+PROTOCOL_MAJOR = 2
+PROTOCOL_MINOR = 0
 
 
 def _now_ms() -> int:
@@ -87,6 +89,18 @@ async def _handle_client(ws: WSProtocol, state: ServerState) -> None:
             await ws.close()
             return
         if msg.get("t") != "hello":
+            await ws.close()
+            return
+
+        accept = msg.get("accept_major")
+        min_minor = msg.get("min_minor")
+        if (
+            not isinstance(accept, list)
+            or PROTOCOL_MAJOR not in accept
+            or not isinstance(min_minor, int)
+            or min_minor > PROTOCOL_MINOR
+        ):
+            await _send_error(ws, state, "incompatible_version", "")
             await ws.close()
             return
 
@@ -144,11 +158,8 @@ async def _write_save(state: ServerState, note: str) -> None:
 
     snap = state.sim.snapshot()
     data = {
-        "version": {"major": 2, "minor": 0},
-        "schema_rev": "2.0",
-        "tick": state.tick,
         "grid": {"cm_per_pixel": 1.0, "cells": snap["grid"]},
-        "meta": {"note": note},
+        "meta": {"note": note} if note else {},
     }
     path = Path(f"save-{_now_ms()}.json")
     await asyncio.to_thread(path.write_text, json.dumps(data), encoding="utf-8")
@@ -188,9 +199,7 @@ async def _broadcast_snapshots(state: ServerState) -> None:
             "t": "snapshot",
             "seq": str(next(state.seq)),
             "ts": _now_ms(),
-            "tick": state.tick,
             "grid": {"cm_per_pixel": 1.0, "cells": snap["grid"]},
-            "version": PROTOCOL_VERSION,
         }
         message = json.dumps(payload)
         for ws in list(state.clients):
@@ -265,7 +274,7 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=7777)
     parser.add_argument("--health-port", type=int, default=7778)
-    parser.add_argument("--level", default="levels/level.smoke.pump_to_drain.v1.json")
+    parser.add_argument("--level", default="levels/level.sample.v1.json")
     parser.add_argument("--tick-hz", type=int, default=50)
     args = parser.parse_args()
 
