@@ -1,0 +1,11 @@
+id: obj:places/jezero-odrazu
+jmeno: Jezero odrazu
+typ: lokace
+kategorie: vodni-plocha
+zarazeni: Jizva ticha
+popis: Rozsáhlé a zdánlivě klidné jezero ukryté ve vnitrozemí Jizvy ticha. Jeho hladina je téměř zrcadlová, ale pod povrchem se odehrává mentální bouře, která zasahuje vše živé v širokém okolí.
+Dějiny:
+-1521 (podzim) — Poutník Rian zde zažil přetížení svých smyslů.
++215 (jaro) — Jeho chaotický mentální vliv je citelný na mnoho mil daleko, způsobuje zmatené sny a emoční nestabilitu. Skupina vedená Eamonem z Břehů dorazí na jeho břehy ve snaze nalézt tajemství Písně rovnováhy (viz Příběhy/jizva-ticha/1/13.txt).
+Poznámky:
+Stav jezera je nestabilní. "Píseň u jezera" nebyla přirozeností jezera, ale dočasnou harmonií vytvořenou Eamonem. Nynější chaos je pravděpodobně ještě zesílen blízkostí Hlasu Nicoty.

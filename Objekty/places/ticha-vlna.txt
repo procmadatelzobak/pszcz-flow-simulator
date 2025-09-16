@@ -1,0 +1,11 @@
+id: obj:places/ticha-vlna
+jmeno: Tichá vlna
+typ: lokace
+kategorie: reka
+zarazeni: Jizva ticha
+popis: Široká a klidná řeka vytékající z Tichých vrchů. Nese v sobě jejich utišující ticho, které se šíří krajinou a uklidňuje i ty, kteří se jí dotknou.
+Dějiny:
+Pradávno — Vznikla jako součást geografie světa.
++215 (jaro) — Skupina vedená Eamonem z Břehů překračuje řeku při své cestě od Dubu paměti k Jezeru odrazu (viz Příběhy/jizva-ticha/1/13.txt).
+Poznámky:
+Její ticho je zdravé a životodárné, na rozdíl od zničujícího ticha šířeného Hlasem Nicoty.

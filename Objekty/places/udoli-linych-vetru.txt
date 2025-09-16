@@ -1,0 +1,10 @@
+id: obj:places/udoli-linych-vetru
+jmeno: Údolí líných větrů
+typ: lokace
+kategorie: udoli
+zarazeni: Jizva ticha
+popis: Široké údolí, v němž se vítr sotva pohne. Poutníci věří, že sem proudy vzduchu přicházejí zemřít a že mezi mechem porostlými menhiry dřímá ozvěna prvních slov světa.
+Dějiny:
++215 (jaro) — Společenstvo vedené Eamonem z Břehů prochází údolím na své cestě k Jezeru odrazu a vnímá jeho netečný klid (viz Příběhy/jizva-ticha/1/13.txt).
+Poznámky:
+Údolí je klidné, ale nese hlubokou paměť, kterou lze probudit správnou písní nebo rituálem.
