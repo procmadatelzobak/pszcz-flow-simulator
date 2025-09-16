@@ -13,3 +13,7 @@ Tento adresář obsahuje kroniku událostí ze světa Jizvy ticha.
 2. Doplňte konzistentní metadata a odkazy na související objekty.
 3. Příběh uložte v kódování UTF-8.
 4. Aktualizujte související záznamy v adresáři `Objekty/`.
+
+## Přehled nových přírůstků
+
+- **Kapitola 14 – „První lekce ticha“**: Společenstvo se učí mentální techniku přežití u Jezera odrazu a poprvé zaslechne ozvěnu Písně rovnováhy.
