@@ -7,5 +7,6 @@ popis: Rozsáhlé a zdánlivě klidné jezero ukryté ve vnitrozemí Jizvy ticha
 Dějiny:
 -1521 (podzim) — Poutník Rian zde zažil přetížení svých smyslů.
 +215 (jaro) — Jeho chaotický mentální vliv je citelný na mnoho mil daleko, způsobuje zmatené sny a emoční nestabilitu. Skupina vedená Eamonem z Břehů dorazí na jeho břehy ve snaze nalézt tajemství Písně rovnováhy (viz Příběhy/jizva-ticha/1/13.txt).
++215 (jaro) — Během mentálního cvičení vedeného Eamonem se z chaosu ozvěn na krátký okamžik vynoří jediný čistý tón, pozůstatek původní Písně rovnováhy. To potvrzuje, že její ozvěna v jezeře stále přežívá (viz Příběhy/jizva-ticha/1/14.txt).
 Poznámky:
 Stav jezera je nestabilní. "Píseň u jezera" nebyla přirozeností jezera, ale dočasnou harmonií vytvořenou Eamonem. Nynější chaos je pravděpodobně ještě zesílen blízkostí Hlasu Nicoty.

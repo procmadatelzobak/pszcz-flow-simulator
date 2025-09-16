@@ -5,5 +5,6 @@ zarazeni: Strážci Břehů
 popis: Průvodce a pěvec rovnováhy, který zná příběhy krajiny a snaží se obnovit harmonii v Jizvě ticha.
 Dějiny:
 +215 (jaro) — Putuje od Dubu paměti k Jezeru odrazu. Během cesty je konfrontován s chaotickým vlivem jezera, který narušuje sny a emoce (viz Příběhy/jizva-ticha/1/13.txt).
++215 (jaro) — Vede první lekci mentální disciplíny u Jezera odrazu, kde učí společenstvo, jak přežít v mentálním chaosu jezera, a společně s nimi vyslechne krátkou, čistou ozvěnu Písně rovnováhy (viz Příběhy/jizva-ticha/1/14.txt).
 Poznámky:
 Eamon je klíčem k Písni rovnováhy; jeho znalost posvátných míst je nezbytná pro zvládnutí mentálního bouření Jezera odrazu.
