@@ -1,0 +1,9 @@
+id: obj:postavy/vorin-ze-silencie
+jmeno: Vorin ze Silencie
+typ: osoba
+zarazeni: Společenstvo Jizvy ticha
+popis: Vědec a analytik, který propojuje logiku Silencie s realitou Jizvy ticha a hledá v chaosu řád.
+Dějiny:
++215 (jaro) — Putuje od Dubu paměti k Jezeru odrazu. Během cesty je konfrontován s chaotickým vlivem jezera, který narušuje sny a emoce (viz Příběhy/jizva-ticha/1/13.txt).
+Poznámky:
+Jeho měřicí přístroje zaznamenávají extrémní hodnoty ozvěn, což posiluje jeho odhodlání pochopit mechaniku rány ve světové paměti.
