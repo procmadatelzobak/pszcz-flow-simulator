@@ -6,6 +6,7 @@ Adresář `Objekty/` uchovává popisy míst, postav a konceptů propojených s 
 
 - `places/` – Lokace a významná místa.
 - `postavy/` – Důležité postavy a jejich role.
+- `concepts/` – Abstraktní pojmy, společenstva a ideje formující svět.
 - Hlavní soubor `jizva-ticha.txt` zachycuje vývoj celého regionu.
 
 ## Zásady úprav

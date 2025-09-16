@@ -1,0 +1,16 @@
+id: obj:concepts/ladici
+jmeno: Ladiči (novodobí)
+kategorie: concepts
+stav: formuje se
+aliasy: Společenstvo Jizvy
+naposledy_upraveno: 2025-09-16
+
+Popis:
+Neformální označení pro skupinu hrdinů (Kaelen, Lyra, Vorin, Eamon, Rhea, Joric, Orin), kteří se na jaře roku +215 vydali k Jezeru odrazu s cílem pochopit a znovu vytvořit Píseň rovnováhy jako prostředek proti Hlasu Nicoty. Na rozdíl od původních Strážců jezera (také zvaných Ladiči), jejichž úkolem bylo jen dočasně harmonizovat jezero, cílem této nové skupiny je vytvořit Píseň, která by mohla rezonovat celým světem.
+
+Dějiny:
+
++215 (jaro) — Skupina se zformuje na březích Jezera odrazu a přijímá svůj úkol. Vorin je určen jako "ucho pro hvězdy", Lyra jako "ucho pro zemi" a Kaelen jako "srdce" operace (viz Příběhy/jizva-ticha/1/15.txt).
+
+Poznámky:
+Jejich pokus je nesmírně nebezpečný a jeho výsledek nejistý. Představuje první aktivní, ofenzivní krok proti hrozbě z Tiché prázdnoty.

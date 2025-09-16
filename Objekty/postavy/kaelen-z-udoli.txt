@@ -6,5 +6,6 @@ popis: Odolný bojovník a ochránce skupiny, jehož síla spočívá ve vytrval
 Dějiny:
 +215 (jaro) — Putuje od Dubu paměti k Jezeru odrazu. Během cesty je konfrontován s chaotickým vlivem jezera, který narušuje sny a emoce (viz Příběhy/jizva-ticha/1/13.txt).
 +215 (jaro) — Účastní se první lekce mentální disciplíny u Jezera odrazu pod vedením Eamona. Učí se základní techniku přežití v mentálním chaosu a stává se svědkem krátké, čisté ozvěny Písně rovnováhy (viz Příběhy/jizva-ticha/1/14.txt).
++215 (jaro) — Na březích Jezera odrazu přijímá roli mentálního mostu mezi tóny Hvězdné mysli a paměti země; stává se srdcem novodobých Ladičů a připravuje se spojit tři prameny Písně rovnováhy (viz Příběhy/jizva-ticha/1/15.txt).
 Poznámky:
 Kaelen často přebírá roli ukotvení pro ostatní, zvláště pro Lyru, kterou v nejistotě drží u reality.

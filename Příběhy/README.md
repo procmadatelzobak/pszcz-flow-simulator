@@ -17,3 +17,4 @@ Tento adresář obsahuje kroniku událostí ze světa Jizvy ticha.
 ## Přehled nových přírůstků
 
 - **Kapitola 14 – „První lekce ticha“**: Společenstvo se učí mentální techniku přežití u Jezera odrazu a poprvé zaslechne ozvěnu Písně rovnováhy.
+- **Kapitola 15 – „Tři prameny písně“**: Ladiči přijímají své role pro rekonstrukci Písně rovnováhy a završují první knihu trilogie Šepot na hranici.
